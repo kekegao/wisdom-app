@@ -16,11 +16,11 @@ import kotlinx.coroutines.launch
  */
 enum class ShipperOrderTab(val label: String, val statuses: Set<Int>?) {
     ALL("全部", null),
-    WAITING("待接单", setOf(1)),
+    // WAITING("待接单", setOf(1)),
     ACCEPTED("已接单", setOf(2, 3)),
     RUNNING("运输中", setOf(4)),
     DONE("已完成", (5..10).toSet()),
-    CANCELED("已取消", setOf(-1)),
+    // CANCELED("已取消", setOf(-1)),
 }
 
 /**
