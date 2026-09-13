@@ -1,7 +1,7 @@
 package com.monkey.wisdom.data.model
 
 /**
- * 已绑定银行卡（当前后端未提供银行卡接口，与 Web 端保持一致采用本地存储）。
+ * 已绑定银行卡（当前后端未提供银行卡接口，与 Web 端保持一致采用本地存储）。kkk
  */
 data class BankCard(
     val id: Long,
