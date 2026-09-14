@@ -38,6 +38,12 @@ fun ShipperHomeScreen(
         services = listOf(
             HomeServiceItem(badge = "卡", title = "银行卡管理", accent = Color(0xFF3B82F6), route = AppRoute.BANK_LIST),
             HomeServiceItem(badge = "发", title = "发布运单", accent = Color(0xFF059669), route = AppRoute.PUBLISH_ORDER),
+            HomeServiceItem(
+                badge = "收",
+                title = "收支明细",
+                accent = Color(0xFF8B5CF6),
+                route = AppRoute.INCOME_EXPENSE_LIST,
+            ),
             HomeServiceItem(badge = "信", title = "我的消息", accent = Color(0xFFF59E0B)),
             HomeServiceItem(badge = "更", title = "更多功能", accent = Color(0xFF6B7280)),
         ),

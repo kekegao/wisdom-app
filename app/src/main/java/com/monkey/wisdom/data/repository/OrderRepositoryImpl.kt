@@ -52,6 +52,9 @@ class OrderRepositoryImpl(
     override suspend fun confirmReceipt(orderId: String): AppResult<Unit> =
         operate(orderId, "确认收货失败") { orderApi.confirmReceipt(it) }
 
+    override suspend fun reconcileOrder(orderId: String): AppResult<Unit> =
+        operate(orderId, "对账失败，请稍后重试") { orderApi.reconcileOrder(it) }
+
     /** 运单操作统一入口：不同动作只有接口与兜底文案不同 */
     private suspend fun operate(
         orderId: String,

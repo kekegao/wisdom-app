@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,11 +21,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.monkey.wisdom.core.constants.OrderStatus
 import com.monkey.wisdom.core.util.Formatters
 import com.monkey.wisdom.data.model.OrderItem
 import com.monkey.wisdom.di.ServiceLocator
@@ -69,8 +72,9 @@ fun CarrierOrderListScreen(
             onBack = viewModel::closeDetail,
             actionBar = {
                 val action = when (detailOrder.status) {
-                    3 -> CarrierConfirmAction.SHIP
-                    4 -> CarrierConfirmAction.RECEIPT
+                    OrderStatus.SHIPPED.code -> CarrierConfirmAction.SHIP
+                    OrderStatus.RECEIPT_CONFIRMED.code -> CarrierConfirmAction.RECEIPT
+                    OrderStatus.SETTLE_APPLIED.code -> CarrierConfirmAction.RECONCILE
                     else -> null
                 }
                 if (action != null) {
@@ -85,6 +89,14 @@ fun CarrierOrderListScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(46.dp),
+                            colors = if (action == CarrierConfirmAction.RECONCILE) {
+                                ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFFF97316),
+                                    contentColor = Color.White,
+                                )
+                            } else {
+                                ButtonDefaults.buttonColors()
+                            },
                         ) {
                             Text(text = action.buttonText, fontSize = 16.sp)
                         }
@@ -239,18 +251,25 @@ private fun CarrierOrderCard(
             Text(text = Formatters.time(order.updateTime ?: order.createTime), color = TextMuted, fontSize = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (order.status) {
-                    3 -> CardActionButton(
+                    OrderStatus.SHIPPED.code -> CardActionButton(
                         text = "确认发货",
                         primary = true,
                         enabled = !submitting,
                         onClick = { onConfirm(CarrierConfirmAction.SHIP) },
                     )
 
-                    4 -> CardActionButton(
+                    OrderStatus.RECEIPT_CONFIRMED.code -> CardActionButton(
                         text = "确认收货",
                         primary = true,
                         enabled = !submitting,
                         onClick = { onConfirm(CarrierConfirmAction.RECEIPT) },
+                    )
+
+                    OrderStatus.SETTLE_APPLIED.code -> CardActionButton(
+                        text = "对账",
+                        highlight = true,
+                        enabled = !submitting,
+                        onClick = { onConfirm(CarrierConfirmAction.RECONCILE) },
                     )
                 }
                 CardActionButton(text = "查看详情", onClick = onDetail)

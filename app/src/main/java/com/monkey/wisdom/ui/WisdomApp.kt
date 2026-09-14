@@ -13,6 +13,7 @@ import com.monkey.wisdom.core.storage.UserSession
 import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.ui.account.AccountScreen
 import com.monkey.wisdom.ui.account.BankListScreen
+import com.monkey.wisdom.ui.account.IncomeExpenseScreen
 import com.monkey.wisdom.ui.account.RechargeScreen
 import com.monkey.wisdom.ui.account.WithdrawScreen
 import com.monkey.wisdom.ui.home.CarrierHomeScreen
@@ -123,6 +124,9 @@ private fun MainNavHost(
         }
         composable(AppRoute.BANK_LIST) {
             BankListScreen(onBack = back)
+        }
+        composable(AppRoute.INCOME_EXPENSE_LIST) {
+            IncomeExpenseScreen(onBack = back)
         }
     }
 }

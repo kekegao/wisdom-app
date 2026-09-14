@@ -20,4 +20,5 @@ object AppRoute {
     const val RECHARGE = "recharge"
     const val WITHDRAW = "withdraw"
     const val BANK_LIST = "bankList"
+    const val INCOME_EXPENSE_LIST = "incomeExpenseList"
 }

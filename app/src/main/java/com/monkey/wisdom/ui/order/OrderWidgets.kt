@@ -398,16 +398,18 @@ fun CardActionButton(
     modifier: Modifier = Modifier,
     primary: Boolean = false,
     danger: Boolean = false,
+    highlight: Boolean = false,
     enabled: Boolean = true,
 ) {
     val containerColor = when {
         danger -> Color(0xFFDC2626)
+        highlight -> Color(0xFFF97316)
         primary -> MaterialTheme.colorScheme.primary
         else -> Color.Transparent
     }
-    val contentColor = if (primary || danger) Color.White else TextSecondary
+    val contentColor = if (primary || danger || highlight) Color.White else TextSecondary
 
-    if (primary || danger) {
+    if (primary || danger || highlight) {
         Button(
             onClick = onClick,
             modifier = modifier.height(32.dp),
@@ -415,7 +417,11 @@ fun CardActionButton(
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 14.dp, vertical = 0.dp),
             colors = ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = contentColor),
         ) {
-            Text(text = text, fontSize = 13.sp)
+            Text(
+                text = text,
+                fontSize = 13.sp,
+                fontWeight = if (highlight) FontWeight.SemiBold else null,
+            )
         }
     } else {
         OutlinedButton(

@@ -65,4 +65,8 @@ interface OrderApi {
     /** 确认收货：发货(4) → 确认收货(5) */
     @POST("accept/confirmReceipt")
     suspend fun confirmReceipt(@Body request: OrderOperateRequest): ApiResult<JsonElement>
+
+    /** 承运方对账：结算申请(7) -> 对账(9)，确认清算金额并触发资金结算 */
+    @POST("accept/reconcileOrder")
+    suspend fun reconcileOrder(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 }

@@ -43,4 +43,7 @@ interface OrderRepository {
 
     /** 承运方确认收货 */
     suspend fun confirmReceipt(orderId: String): AppResult<Unit>
+
+    /** 承运方对账：确认清算金额并触发资金结算 */
+    suspend fun reconcileOrder(orderId: String): AppResult<Unit>
 }

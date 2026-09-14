@@ -18,7 +18,7 @@ enum class CarrierOrderTab(val label: String) {
     DONE("已完成"),
 }
 
-/** 承运端运单操作（确认发货 / 确认收货） */
+/** 承运端运单操作（确认发货 / 确认收货 / 对账） */
 enum class CarrierConfirmAction(
     val title: String,
     val buttonText: String,
@@ -36,6 +36,12 @@ enum class CarrierConfirmAction(
         buttonText = "确认收货",
         tip = "是否确认该运单已送达并完成收货？确认后等待货主回单确认，运费按平台托管流程结算。",
         successMessage = "已确认收货，等待货主回单确认",
+    ),
+    RECONCILE(
+        title = "对账确认",
+        buttonText = "确认对账",
+        tip = "是否确认该运单结算金额无误？确认后平台将按清算单把运费划入您的账户。",
+        successMessage = "对账成功，运费已划入账户",
     ),
 }
 
@@ -126,6 +132,7 @@ class CarrierOrderListViewModel(
             val result = when (action) {
                 CarrierConfirmAction.SHIP -> orderRepository.shipOrder(order.orderId)
                 CarrierConfirmAction.RECEIPT -> orderRepository.confirmReceipt(order.orderId)
+                CarrierConfirmAction.RECONCILE -> orderRepository.reconcileOrder(order.orderId)
             }
             _state.update {
                 it.copy(
