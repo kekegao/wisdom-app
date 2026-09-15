@@ -18,7 +18,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -127,22 +126,6 @@ fun AccountScreen(
                 )
             }
 
-            // ==== 底部操作栏 ====
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(BgCard)
-                    .padding(12.dp),
-            ) {
-                Button(
-                    onClick = onMyOrder,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp),
-                ) {
-                    Text(text = "我的运单", fontSize = 16.sp)
-                }
-            }
         }
     }
 }

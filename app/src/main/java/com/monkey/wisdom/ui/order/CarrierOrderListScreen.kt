@@ -70,6 +70,7 @@ fun CarrierOrderListScreen(
             statusText = carrierOrderStatusText(detailOrder.status, detailOrder.statusDesc),
             statusStyle = carrierOrderStatusStyle(detailOrder.status),
             onBack = viewModel::closeDetail,
+            showCallButton = true,
             actionBar = {
                 // 与后端流转一致：成交(3)→发货(4) 确认发货；发货(4)→确认收货(5) 确认收货；结算申请(7)→对账(9) 对账
                 val action = when (detailOrder.status) {

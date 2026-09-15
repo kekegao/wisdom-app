@@ -71,7 +71,13 @@ private fun MainNavHost(
         composable(AppRoute.PUBLISH_ORDER) {
             PublishOrderScreen(
                 onBack = back,
-                onViewOrders = { navigate(AppRoute.PUBLISH_ORDER_LIST) },
+                // 发布成功后直接回到订单列表：弹出发布页，避免回退又停在已提交的表单
+                onViewOrders = {
+                    navController.navigate(AppRoute.PUBLISH_ORDER_LIST) {
+                        popUpTo(AppRoute.PUBLISH_ORDER) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                },
             )
         }
         composable(AppRoute.PUBLISH_ORDER_LIST) {

@@ -13,11 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -30,7 +31,7 @@ import com.monkey.wisdom.ui.components.FormChips
 import com.monkey.wisdom.ui.components.FormInput
 import com.monkey.wisdom.ui.components.FormSection
 import com.monkey.wisdom.ui.components.FormTextArea
-import com.monkey.wisdom.ui.components.SectionCard
+import com.monkey.wisdom.ui.components.showToast
 import com.monkey.wisdom.ui.theme.BgCard
 
 /**
@@ -45,6 +46,15 @@ fun PublishOrderScreen(
     viewModel: PublishOrderViewModel = viewModel { PublishOrderViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // 发布成功后直接回到订单列表，不停留在已提交的表单页
+    LaunchedEffect(state.published) {
+        if (state.published) {
+            showToast(context, "订单发布成功")
+            onViewOrders()
+        }
+    }
 
     AppScaffold(title = "发布运单", onBack = onBack) { padding ->
         Column(
@@ -190,26 +200,6 @@ fun PublishOrderScreen(
                 // ==== 提示信息 ====
                 state.errorMessage?.let { message ->
                     FormBanner(text = message, isError = true)
-                }
-                state.successMessage?.let { message ->
-                    SectionCard {
-                        FormBanner(text = message, isError = false)
-                        Text(
-                            text = "去查看我的订单 ›",
-                            modifier = Modifier.padding(top = 10.dp),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 13.sp,
-                        )
-                        Button(
-                            onClick = onViewOrders,
-                            modifier = Modifier
-                                .padding(top = 4.dp)
-                                .fillMaxWidth()
-                                .height(42.dp),
-                        ) {
-                            Text(text = "查看我的订单", fontSize = 14.sp)
-                        }
-                    }
                 }
             }
 

@@ -50,8 +50,9 @@ data class PublishOrderFormState(
 
     // ==== 提交态 ====
     val errorMessage: String? = null,
-    val successMessage: String? = null,
     val submitting: Boolean = false,
+    /** 发布成功标记：界面据此直接跳转订单列表，不再停留在已提交的表单页 */
+    val published: Boolean = false,
 ) {
 
     /** 是否选择了「其他」，需要展示自定义物品类型输入框 */
@@ -96,9 +97,9 @@ class PublishOrderViewModel(
         }
     }
 
-    /** 清空错误/成功提示 */
+    /** 清空错误提示 */
     fun clearMessages() {
-        _state.update { it.copy(errorMessage = null, successMessage = null) }
+        _state.update { it.copy(errorMessage = null) }
     }
 
     /** 提交发布 */
@@ -108,18 +109,19 @@ class PublishOrderViewModel(
 
         val validationError = validate(current)
         if (validationError != null) {
-            _state.update { it.copy(errorMessage = validationError, successMessage = null) }
+            _state.update { it.copy(errorMessage = validationError) }
             return
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(submitting = true, errorMessage = null, successMessage = null) }
+            _state.update { it.copy(submitting = true, errorMessage = null) }
             when (val result = orderRepository.publishOrder(buildRequest(current))) {
                 is AppResult.Success -> _state.update { state ->
-                    // 与 Web 端一致：发布成功后清空货物与地址，保留货主信息
+                    // 与 Web 端一致：发布成功后清空货物与地址，保留货主信息；
+                    // published 置位由界面消费后立即跳转订单列表
                     state.copy(
                         submitting = false,
-                        successMessage = "订单发布成功",
+                        published = true,
                         goodsType = "",
                         customGoodsType = "",
                         goodsDescription = "",

@@ -13,9 +13,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -68,6 +74,9 @@ fun PublishOrderListScreen(
         }
     }
 
+    // 进入页面或从发布页返回时刷新，保证刚发布的运单立即可见
+    LaunchedEffect(Unit) { viewModel.loadOrders() }
+
     val detailOrder = state.detailOrder
     if (detailOrder != null) {
         OrderDetailScreen(
@@ -75,6 +84,7 @@ fun PublishOrderListScreen(
             statusText = shipperStatusText(detailOrder.status, detailOrder.statusDesc),
             statusStyle = shipperStatusStyle(detailOrder.status),
             onBack = viewModel::closeDetail,
+            showCarrierMobile = true,
             actionBar = {
                 ShipperDetailActions(
                     order = detailOrder,
@@ -309,6 +319,8 @@ fun OrderDetailScreen(
     onBack: () -> Unit,
     actionBar: @Composable () -> Unit = {},
     showShipperContact: Boolean = true,
+    showCallButton: Boolean = false,
+    showCarrierMobile: Boolean = false,
 ) {
     AppScaffold(title = "订单详情", onBack = onBack) { padding ->
         Column(
@@ -385,12 +397,32 @@ fun OrderDetailScreen(
                         carrierAddress = order.carrierAddress,
                     )
                     if (showShipperContact && !order.shipperName.isNullOrBlank()) {
-                        Text(
-                            text = "联系人：${order.shipperName} ${Formatters.maskMobile(order.shipperMobile)}",
+                        Row(
                             modifier = Modifier.padding(top = 12.dp),
-                            color = TextSecondary,
-                            fontSize = 13.sp,
-                        )
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = "联系人：${order.shipperName} ${if (showCallButton) order.shipperMobile.orEmpty() else Formatters.maskMobile(order.shipperMobile)}",
+                                modifier = Modifier.weight(1f),
+                                color = TextSecondary,
+                                fontSize = 13.sp,
+                            )
+                            if (showCallButton && !order.shipperMobile.isNullOrBlank()) {
+                                val context = LocalContext.current
+                                IconButton(
+                                    onClick = {
+                                        val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${order.shipperMobile}"))
+                                        context.startActivity(intent)
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Call,
+                                        contentDescription = "拨打电话",
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -407,6 +439,9 @@ fun OrderDetailScreen(
                         InfoRow(label = "运费", value = orderFeeText(order.transportMoney))
                         InfoRow(label = "物品描述", value = displayOrDash(order.goodsDescription), valueBold = false)
                         InfoRow(label = "承运方", value = displayOrDash(order.carrierName ?: order.carrierUserName))
+                        if (showCarrierMobile && !order.carrierMobile.isNullOrBlank()) {
+                            InfoRow(label = "承运方电话", value = order.carrierMobile)
+                        }
                         InfoRow(label = "更新时间", value = Formatters.time(order.updateTime))
                     }
                 }
