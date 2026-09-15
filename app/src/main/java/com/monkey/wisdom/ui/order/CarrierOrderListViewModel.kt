@@ -28,7 +28,7 @@ enum class CarrierConfirmAction(
     SHIP(
         title = "确认发货",
         buttonText = "确认发货",
-        tip = "是否确认该运单已发货？确认后运单进入运输中，货主可实时查看运输进度。",
+        tip = "是否确认该运单已装车发货？\n确认后运单进入运输中，货主可实时查看运输进度；同时平台将冻结您的承运保证金，待货主回单确认后解冻。",
         successMessage = "已确认发货，运单进入运输中",
     ),
     RECEIPT(

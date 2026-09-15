@@ -28,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.monkey.wisdom.core.constants.OrderStatus
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.BgPage
 import com.monkey.wisdom.ui.theme.TextMuted
@@ -64,9 +65,12 @@ fun carrierOrderStatusStyle(status: Int): StatusStyle =
     if (status in RUNNING_STATUSES) StatusStyle(Color(0xFF0369A1), Color(0xFFE0F2FE))
     else StatusStyle(Color(0xFF047857), Color(0xFFD1FAE5))
 
-/** 承运端「我的运单」状态文案：优先后端 statusDesc */
-fun carrierOrderStatusText(status: Int, statusDesc: String?): String =
-    statusDesc?.takeIf { it.isNotBlank() } ?: CARRIER_STATUS_TEXT[status] ?: "状态$status"
+/** 承运端「我的运单」状态文案：优先后端 statusDesc；对账状态统一展示“已对账” */
+fun carrierOrderStatusText(status: Int, statusDesc: String?): String {
+    // 与操作按钮“对账”区分，状态到达 9 后展示“已对账”
+    if (status == OrderStatus.RECONCILED.code) return "已对账"
+    return statusDesc?.takeIf { it.isNotBlank() } ?: CARRIER_STATUS_TEXT[status] ?: "状态$status"
+}
 
 /** 货源大厅状态配色：可摘单 / 已摘单 */
 fun sourceStatusStyle(status: Int): StatusStyle =
@@ -87,7 +91,7 @@ private val CARRIER_STATUS_TEXT = mapOf(
     6 to "回单确认",
     7 to "结算申请",
     8 to "结算",
-    9 to "对账",
+    9 to "已对账",
     10 to "发票",
 )
 

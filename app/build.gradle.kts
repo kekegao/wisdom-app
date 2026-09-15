@@ -6,8 +6,8 @@ plugins {
 // 后端基础地址：默认指向联调后端（192.168.64.1:8083）。
 // 真机 / 联调可在命令行覆盖：./gradlew assembleDebug -PAPI_BASE_URL=http://192.168.1.10:8083/
 // 备用：模拟器宿主机地址（需要时启用下面这行，并注释掉当前生效的那行）
-val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://10.0.2.2:8083/")
-//val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://192.168.2.2:8083/")
+//val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://10.0.2.2:8083/")
+val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://192.168.2.2:8083/")
 
 android {
     namespace = "com.monkey.wisdom"

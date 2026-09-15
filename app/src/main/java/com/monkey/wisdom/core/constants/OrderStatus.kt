@@ -31,7 +31,7 @@ enum class OrderStatus(val code: Int, val label: String) {
     SETTLED(8, "结算"),
 
     /** 已对账 */
-    RECONCILED(9, "对账"),
+    RECONCILED(9, "已对账"),
 
     /** 已开票 */
     INVOICED(10, "发票"),

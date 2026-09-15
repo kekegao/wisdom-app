@@ -71,9 +71,10 @@ fun CarrierOrderListScreen(
             statusStyle = carrierOrderStatusStyle(detailOrder.status),
             onBack = viewModel::closeDetail,
             actionBar = {
+                // 与后端流转一致：成交(3)→发货(4) 确认发货；发货(4)→确认收货(5) 确认收货；结算申请(7)→对账(9) 对账
                 val action = when (detailOrder.status) {
-                    OrderStatus.SHIPPED.code -> CarrierConfirmAction.SHIP
-                    OrderStatus.RECEIPT_CONFIRMED.code -> CarrierConfirmAction.RECEIPT
+                    OrderStatus.DEALED.code -> CarrierConfirmAction.SHIP
+                    OrderStatus.SHIPPED.code -> CarrierConfirmAction.RECEIPT
                     OrderStatus.SETTLE_APPLIED.code -> CarrierConfirmAction.RECONCILE
                     else -> null
                 }
@@ -186,10 +187,11 @@ fun CarrierOrderListScreen(
     }
 
     val confirmAction = state.confirmAction
-    if (confirmAction != null) {
+    val confirmOrder = state.confirmOrder
+    if (confirmAction != null && confirmOrder != null) {
         ConfirmDialog(
             title = confirmAction.title,
-            message = confirmAction.tip,
+            message = "运单号：${confirmOrder.orderId}\n${confirmAction.tip}",
             confirmText = if (state.submitting) "提交中…" else confirmAction.buttonText,
             dismissText = "再想想",
             onConfirm = viewModel::submitConfirm,
@@ -251,14 +253,16 @@ private fun CarrierOrderCard(
             Text(text = Formatters.time(order.updateTime ?: order.createTime), color = TextMuted, fontSize = 12.sp)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 when (order.status) {
-                    OrderStatus.SHIPPED.code -> CardActionButton(
+                    // 成交(3)：等待承运方确认发货
+                    OrderStatus.DEALED.code -> CardActionButton(
                         text = "确认发货",
                         primary = true,
                         enabled = !submitting,
                         onClick = { onConfirm(CarrierConfirmAction.SHIP) },
                     )
 
-                    OrderStatus.RECEIPT_CONFIRMED.code -> CardActionButton(
+                    // 发货(4)：运输中，到货后由承运方确认收货
+                    OrderStatus.SHIPPED.code -> CardActionButton(
                         text = "确认收货",
                         primary = true,
                         enabled = !submitting,
