@@ -45,6 +45,7 @@ fun ShipperHomeScreen(
                 route = AppRoute.INCOME_EXPENSE_LIST,
             ),
             HomeServiceItem(badge = "信", title = "我的消息", accent = Color(0xFFF59E0B)),
+            HomeServiceItem(badge = "新", title = "检查更新", accent = Color(0xFF0EA5E9), route = AppRoute.APP_UPDATE),
             HomeServiceItem(badge = "更", title = "更多功能", accent = Color(0xFF6B7280)),
         ),
         onNavigate = onNavigate,

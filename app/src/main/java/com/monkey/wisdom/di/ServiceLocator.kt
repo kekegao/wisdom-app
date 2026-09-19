@@ -4,10 +4,13 @@ import android.content.Context
 import com.monkey.wisdom.core.network.NetworkModule
 import com.monkey.wisdom.core.storage.UserSession
 import com.monkey.wisdom.data.remote.api.AccountApi
+import com.monkey.wisdom.data.remote.api.AppVersionApi
 import com.monkey.wisdom.data.remote.api.AuthApi
 import com.monkey.wisdom.data.remote.api.OrderApi
 import com.monkey.wisdom.data.repository.AccountRepository
 import com.monkey.wisdom.data.repository.AccountRepositoryImpl
+import com.monkey.wisdom.data.repository.AppVersionRepository
+import com.monkey.wisdom.data.repository.AppVersionRepositoryImpl
 import com.monkey.wisdom.data.repository.AuthRepository
 import com.monkey.wisdom.data.repository.AuthRepositoryImpl
 import com.monkey.wisdom.data.repository.BankCardRepository
@@ -30,6 +33,7 @@ object ServiceLocator {
     private val authApi: AuthApi by lazy { NetworkModule.createApi<AuthApi>() }
     private val orderApi: OrderApi by lazy { NetworkModule.createApi<OrderApi>() }
     private val accountApi: AccountApi by lazy { NetworkModule.createApi<AccountApi>() }
+    private val appVersionApi: AppVersionApi by lazy { NetworkModule.createApi<AppVersionApi>() }
 
     /** 认证仓库 */
     val authRepository: AuthRepository by lazy { AuthRepositoryImpl(authApi) }
@@ -39,6 +43,9 @@ object ServiceLocator {
 
     /** 智运宝账户仓库 */
     val accountRepository: AccountRepository by lazy { AccountRepositoryImpl(accountApi) }
+
+    /** APP 版本仓库（检查更新） */
+    val appVersionRepository: AppVersionRepository by lazy { AppVersionRepositoryImpl(appVersionApi) }
 
     /** 银行卡仓库（本地存储） */
     val bankCardRepository: BankCardRepository by lazy { BankCardRepositoryImpl(appContext) }

@@ -24,6 +24,8 @@ import com.monkey.wisdom.ui.order.CarrierAcceptOrderScreen
 import com.monkey.wisdom.ui.order.CarrierOrderListScreen
 import com.monkey.wisdom.ui.order.PublishOrderListScreen
 import com.monkey.wisdom.ui.order.PublishOrderScreen
+import com.monkey.wisdom.ui.update.AppUpdateHost
+import com.monkey.wisdom.ui.update.AppUpdateScreen
 
 /**
  * 应用组合根。
@@ -58,6 +60,9 @@ private fun MainNavHost(
     val startRoute = if (user.userType == UserType.CARRIER) AppRoute.CARRIER_HOME else AppRoute.SHIPPER_HOME
     val navigate: (String) -> Unit = { route -> navController.navigate(route) }
     val back: () -> Unit = { navController.popBackStack() }
+
+    // 启动后静默检查更新：有新版本才弹窗，无新版本不打扰
+    AppUpdateHost()
 
     NavHost(navController = navController, startDestination = startRoute) {
         composable(AppRoute.SHIPPER_HOME) {
@@ -133,6 +138,11 @@ private fun MainNavHost(
         }
         composable(AppRoute.INCOME_EXPENSE_LIST) {
             IncomeExpenseScreen(onBack = back)
+        }
+
+        // ==== 其他 ====
+        composable(AppRoute.APP_UPDATE) {
+            AppUpdateScreen(onBack = back)
         }
     }
 }

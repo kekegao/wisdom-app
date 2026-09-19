@@ -13,3 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# 发布签名：密钥文件与密码不进仓库
+signing.properties
+*.jks
+*.keystore

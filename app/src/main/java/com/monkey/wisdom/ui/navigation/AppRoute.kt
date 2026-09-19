@@ -21,4 +21,7 @@ object AppRoute {
     const val WITHDRAW = "withdraw"
     const val BANK_LIST = "bankList"
     const val INCOME_EXPENSE_LIST = "incomeExpenseList"
+
+    // ==== 其他 ====
+    const val APP_UPDATE = "appUpdate"
 }
