@@ -20,8 +20,9 @@ class AuthRepositoryImpl(
     override suspend fun login(mobile: String, password: String): AppResult<UserInfo> = safeApiCall {
         val result = authApi.login(LoginRequest(mobile = mobile, password = password))
         if (!result.isSuccess) {
-            // HTTP 200 也可能是业务失败（如 code=500），此处不进入登录成功流程
-            throw ApiBusinessException(result.errorMessage ?: "登录失败，请稍后重试", result.code)
+            // HTTP 200 也可能是业务失败（如 code=500），此处不进入登录成功流程。
+            // 不回传业务码：登录失败是账号密码问题，不应被识别为会话过期。
+            throw ApiBusinessException(result.errorMessage ?: "登录失败，请稍后重试")
         }
         result.data.toUserInfo(fallbackMobile = mobile)
     }
@@ -29,7 +30,7 @@ class AuthRepositoryImpl(
     override suspend fun register(request: RegisterRequest): AppResult<Unit> = safeApiCall {
         val result = authApi.register(request)
         if (!result.isSuccess) {
-            throw ApiBusinessException(result.errorMessage ?: "注册失败，请稍后重试", result.code)
+            throw ApiBusinessException(result.errorMessage ?: "注册失败，请稍后重试")
         }
     }
 

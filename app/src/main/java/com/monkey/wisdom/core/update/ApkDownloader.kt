@@ -3,6 +3,7 @@ package com.monkey.wisdom.core.update
 import android.content.Context
 import android.os.Environment
 import com.monkey.wisdom.core.network.NetworkModule
+import com.monkey.wisdom.core.network.interceptor.SkipSessionCheck
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.Request
@@ -35,7 +36,13 @@ object ApkDownloader {
         if (target.exists()) target.delete()
         if (temp.exists()) temp.delete()
 
-        val response = NetworkModule.okHttpClient.newCall(Request.Builder().url(url).build()).execute()
+        val response = NetworkModule.okHttpClient.newCall(
+            Request.Builder()
+                .url(url)
+                // APK 属于公开静态资源，401 不应被判定为登录态失效
+                .tag(SkipSessionCheck::class.java, SkipSessionCheck)
+                .build(),
+        ).execute()
         if (!response.isSuccessful) {
             response.close()
             throw IllegalStateException("下载失败（HTTP ${response.code}）")

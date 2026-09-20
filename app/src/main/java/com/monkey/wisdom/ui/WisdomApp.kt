@@ -1,6 +1,7 @@
 package com.monkey.wisdom.ui
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -9,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.monkey.wisdom.core.constants.UserType
+import com.monkey.wisdom.core.storage.SessionExpiredBus
 import com.monkey.wisdom.core.storage.UserSession
 import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.ui.account.AccountScreen
@@ -36,10 +38,23 @@ import com.monkey.wisdom.ui.update.AppUpdateScreen
 @Composable
 fun WisdomApp() {
     var currentUser by remember { mutableStateOf(UserSession.currentUser) }
+    var expiredMessage by remember { mutableStateOf<String?>(null) }
     val user = currentUser
 
+    // 会话过期（HTTP 401 / 业务码 401）：清空登录态并回退到登录页，登录页顶部提示原因
+    LaunchedEffect(Unit) {
+        SessionExpiredBus.events.collect { message ->
+            expiredMessage = message
+            currentUser = null
+        }
+    }
+
     if (user == null) {
-        LoginScreen(onLoginSuccess = { loggedInUser -> currentUser = loggedInUser })
+        LoginScreen(
+            onLoginSuccess = { loggedInUser -> currentUser = loggedInUser },
+            hintMessage = expiredMessage,
+            onHintShown = { expiredMessage = null },
+        )
     } else {
         MainNavHost(
             user = user,

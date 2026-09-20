@@ -31,6 +31,26 @@ data class AppVersionInfo(
     /** 展示用版本名，后端缺失时用版本号兜底 */
     val displayVersion: String get() = versionName?.takeIf { it.isNotBlank() } ?: versionCode.toString()
 
-    /** 更新说明，缺失时给出默认文案 */
-    val displayLog: String get() = updateLog?.takeIf { it.isNotBlank() } ?: "优化了部分功能体验，建议及时更新"
+    /** 更新说明，缺失时给出默认文案；对历史乱码做 UTF-8 兜底修复 */
+    val displayLog: String
+        get() = updateLog?.takeIf { it.isNotBlank() }?.fixUtf8Mojibake()
+            ?: "优化了部分功能体验，建议及时更新"
+
+    companion object {
+        /**
+         * 修复「UTF-8 字节被误按 ISO-8859-1 解码」导致的 mojibake 乱码。
+         * 仅当检测到典型乱码字符时才做转换，正常文本无影响。
+         */
+        private fun String.fixUtf8Mojibake(): String {
+            // 典型特征：UTF-8 多字节中文被 Latin-1 解码后会出现这些字符
+            if (!contains(Regex("[ÃÆÅÇÈÌÍÏÐÑÒÓØÙÚÛÜÝÞßæøðñ]"))) {
+                return this
+            }
+            return try {
+                String(toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+            } catch (_: Exception) {
+                this
+            }
+        }
+    }
 }

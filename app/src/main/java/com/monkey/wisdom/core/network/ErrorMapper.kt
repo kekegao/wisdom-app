@@ -1,5 +1,6 @@
 package com.monkey.wisdom.core.network
 
+import com.monkey.wisdom.core.exception.SessionExpiredException
 import com.google.gson.JsonParseException
 import retrofit2.HttpException
 import java.io.IOException
@@ -13,6 +14,8 @@ import java.net.UnknownHostException
 object ErrorMapper {
 
     fun toReadableMessage(throwable: Throwable): String = when (throwable) {
+        is SessionExpiredException -> throwable.message ?: "登录已过期，请重新登录"
+
         is SocketTimeoutException -> "请求超时，请稍后重试"
         is UnknownHostException, is ConnectException ->
             "无法连接服务器，请确认后端服务已启动（模拟器访问宿主机需使用 10.0.2.2）"

@@ -53,11 +53,15 @@ import com.monkey.wisdom.ui.theme.TextSecondary
  * 登录 / 注册页（对齐 Web 端 `views/login.vue` 的交互与视觉）。
  *
  * @param onLoginSuccess 登录成功回调，由组合根负责页面切换
+ * @param hintMessage    进入页面时的提示文案（如会话过期提示），展示后通过 [onHintShown] 回调消费
+ * @param onHintShown    提示已展示，用于清空外部状态避免重复弹出
  */
 @Composable
 fun LoginScreen(
     onLoginSuccess: (UserInfo) -> Unit,
     modifier: Modifier = Modifier,
+    hintMessage: String? = null,
+    onHintShown: () -> Unit = {},
     viewModel: LoginViewModel = viewModel(factory = LoginViewModel.Factory),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -67,6 +71,14 @@ fun LoginScreen(
         uiState.loggedInUser?.let { user ->
             viewModel.consumeLoggedInUser()
             onLoginSuccess(user)
+        }
+    }
+
+    // 会话过期等外部提示：先展示再回调，避免状态清空导致提示被打断
+    LaunchedEffect(hintMessage) {
+        hintMessage?.let { message ->
+            snackbarHostState.showSnackbar(message)
+            onHintShown()
         }
     }
 
