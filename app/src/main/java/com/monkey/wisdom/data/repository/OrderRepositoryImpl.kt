@@ -7,6 +7,8 @@ import com.monkey.wisdom.core.common.safeMessageCall
 import com.monkey.wisdom.core.common.safeUnitCall
 import com.monkey.wisdom.data.model.ApiResult
 import com.monkey.wisdom.data.model.OrderItem
+import com.monkey.wisdom.data.model.PageResult
+import com.monkey.wisdom.data.model.request.ChangePriceRequest
 import com.monkey.wisdom.data.model.request.OrderListQuery
 import com.monkey.wisdom.data.model.request.OrderOperateRequest
 import com.monkey.wisdom.data.model.request.PublishOrderRequest
@@ -29,11 +31,18 @@ class OrderRepositoryImpl(
     override suspend fun querySourceOrders(query: SourceOrderQuery): AppResult<List<OrderItem>> =
         safeDataCall(fallbackMessage = "加载货源大厅失败") { orderApi.querySourceOrders(query) }
 
+    override suspend fun querySourceOrderPage(query: SourceOrderQuery): AppResult<PageResult<OrderItem>> =
+        safeDataCall(fallbackMessage = "加载货源大厅失败") { orderApi.querySourceOrderPage(query) }
+
     override suspend fun queryCarrierOrders(query: OrderListQuery): AppResult<List<OrderItem>> =
         safeDataCall(fallbackMessage = "加载我的运单失败") { orderApi.queryCarrierOrders(query) }
 
     override suspend fun dealOrder(orderId: String): AppResult<Unit> =
         operate(orderId, "确认成交失败") { orderApi.dealOrder(it) }
+
+    // 改价成功文案取后端 message，UI 弹框展示
+    override suspend fun changePrice(orderId: String, transportMoney: Double): AppResult<String> =
+        safeMessageCall("修改价格失败") { orderApi.changePrice(ChangePriceRequest(orderId, transportMoney)) }
 
     override suspend fun cancelAccept(orderId: String): AppResult<Unit> =
         operate(orderId, "取消摘单失败") { orderApi.cancelAccept(it) }

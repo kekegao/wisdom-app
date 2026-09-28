@@ -52,6 +52,12 @@ data class PublishOrderListUiState(
     val successMessage: String? = null,
     /** 后端接口返回失败提示（弹窗展示） */
     val errorDialog: String? = null,
+    /** 正在改价的运单，null 表示未打开改价弹窗 */
+    val changePriceOrder: OrderItem? = null,
+    /** 改价弹窗输入的新运费 */
+    val changePriceInput: String = "",
+    /** 改价输入校验提示（行内展示） */
+    val changePriceError: String? = null,
 ) {
 
     val tabs: List<ShipperOrderTab> get() = ShipperOrderTab.entries
@@ -76,6 +82,11 @@ data class PublishOrderListUiState(
 class PublishOrderListViewModel(
     private val orderRepository: OrderRepository,
 ) : ViewModel() {
+
+    private companion object {
+        /** 单笔运费输入上限（与后端一致：100 万） */
+        const val MAX_CHANGE_PRICE = 1_000_000.0
+    }
 
     private val _state = MutableStateFlow(PublishOrderListUiState())
     val state: StateFlow<PublishOrderListUiState> = _state.asStateFlow()
@@ -191,6 +202,95 @@ class PublishOrderListViewModel(
                         confirmOrder = null,
                         errorDialog = result.message,
                     )
+                }
+            }
+        }
+    }
+
+    /** 打开改价弹窗：回填当前运费，便于修改 */
+    fun openChangePrice(order: OrderItem) {
+        _state.update {
+            it.copy(
+                changePriceOrder = order,
+                changePriceInput = order.transportMoney?.trim().orEmpty(),
+                changePriceError = null,
+            )
+        }
+    }
+
+    fun dismissChangePrice() {
+        _state.update { it.copy(changePriceOrder = null, changePriceInput = "", changePriceError = null) }
+    }
+
+    /** 改价输入：仅允许数字与一个小数点 */
+    fun onChangePriceInputChange(value: String) {
+        val filtered = value.filter { it.isDigit() || it == '.' }
+            .let { text ->
+                val dotIndex = text.indexOf('.')
+                if (dotIndex >= 0) {
+                    text.substring(0, dotIndex + 1) + text.substring(dotIndex + 1).replace(".", "")
+                } else {
+                    text
+                }
+            }
+        _state.update { it.copy(changePriceInput = filtered.take(12), changePriceError = null) }
+    }
+
+    /**
+     * 提交改价：仅「已发布待摘单」运单可改价。
+     *
+     * 后端会同步调整该运单的运费托管冻结金额（涨价补冻结、降价释放差额），
+     * 冻结记录已释放时后端直接拒绝；成功后刷新列表并弹窗提示。
+     */
+    fun submitChangePrice() {
+        val current = _state.value
+        val order = current.changePriceOrder ?: return
+        if (current.submitting) return
+
+        val money = current.changePriceInput.trim().toDoubleOrNull()
+        when {
+            money == null || money <= 0 -> {
+                _state.update { it.copy(changePriceError = "请输入正确的运费金额") }
+                return
+            }
+
+            money > MAX_CHANGE_PRICE -> {
+                _state.update { it.copy(changePriceError = "运费金额超出允许范围") }
+                return
+            }
+        }
+
+        viewModelScope.launch {
+            _state.update { it.copy(submitting = true, changePriceError = null) }
+            when (val result = orderRepository.changePrice(order.orderId, money)) {
+                is AppResult.Success -> {
+                    // 优先展示后端返回的文案，后端没给才回退本地文案
+                    val message = result.data.takeIf { it.isNotBlank() }
+                        ?: "运费已修改，冻结金额已同步调整"
+                    _state.update { state ->
+                        val updated = state.allOrders.map { item ->
+                            if (item.orderId == order.orderId) {
+                                item.copy(transportMoney = money.toString())
+                            } else {
+                                item
+                            }
+                        }
+                        val refreshedDetail = state.detailOrder?.let { detail ->
+                            updated.firstOrNull { it.orderId == detail.orderId }
+                        }
+                        state.copy(
+                            submitting = false,
+                            changePriceOrder = null,
+                            changePriceInput = "",
+                            allOrders = updated,
+                            detailOrder = refreshedDetail ?: state.detailOrder,
+                            successMessage = message,
+                        )
+                    }
+                }
+
+                is AppResult.Failure -> _state.update {
+                    it.copy(submitting = false, errorDialog = result.message)
                 }
             }
         }

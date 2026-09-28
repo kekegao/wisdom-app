@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
@@ -27,6 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,6 +73,20 @@ fun CarrierAcceptOrderScreen(
     viewModel: CarrierAcceptOrderViewModel = viewModel { CarrierAcceptOrderViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
+
+    // 上拉到底部自动加载下一页（距底部 3 条时预取，避免用户等待）
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index }
+            .distinctUntilChanged()
+            .collect { lastVisibleIndex ->
+                val totalItems = listState.layoutInfo.totalItemsCount
+                if (lastVisibleIndex != null && totalItems > 0 && lastVisibleIndex >= totalItems - 3) {
+                    viewModel.loadMore()
+                }
+            }
+    }
 
     // 后端接口返回成功：弹窗提示，用户点「确定」后关闭
     SuccessDialog(message = state.successMessage, onDismiss = viewModel::consumeSuccess)
@@ -136,6 +155,7 @@ fun CarrierAcceptOrderScreen(
         ) { padding ->
             val orders = state.orders
             LazyColumn(
+                state = listState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
@@ -194,14 +214,20 @@ fun CarrierAcceptOrderScreen(
                                 Text(
                                     text = "重置",
                                     modifier = Modifier
-                                        .clickable { viewModel.resetSearch() }
+                                        .clickable {
+                                            viewModel.resetSearch()
+                                            scope.launch { listState.scrollToItem(0) }
+                                        }
                                         .padding(horizontal = 8.dp, vertical = 4.dp),
                                     color = TextSecondary,
                                     fontSize = 12.sp,
                                 )
                             }
                             Button(
-                                onClick = viewModel::search,
+                                onClick = {
+                                    viewModel.search()
+                                    scope.launch { listState.scrollToItem(0) }
+                                },
                                 modifier = Modifier
                                     .height(34.dp)
                                     .widthIn(min = 80.dp),
@@ -237,7 +263,11 @@ fun CarrierAcceptOrderScreen(
                     else -> {
                         item {
                             Text(
-                                text = (if (state.searched) "线路匹配" else "共") + " ${orders.size} 条货源",
+                                text = buildString {
+                                    if (state.searched) append("线路匹配 ")
+                                    append(state.countText)
+                                    if (state.openCount > 0L) append(" · 可摘 ${state.openCount} 条")
+                                },
                                 color = TextMuted,
                                 fontSize = 12.sp,
                             )
@@ -249,6 +279,25 @@ fun CarrierAcceptOrderScreen(
                                 onDetail = { viewModel.openDetail(order) },
                                 onGrab = { viewModel.openGrabConfirm(order) },
                             )
+                        }
+                        // 分页底部状态：加载中 / 上拉加载更多 / 已加载全部
+                        item {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 10.dp),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text(
+                                    text = when {
+                                        state.loadingMore -> "正在加载更多…"
+                                        state.hasMore -> "上拉加载更多"
+                                        else -> "已显示全部 ${orders.size} 条货源"
+                                    },
+                                    color = TextMuted,
+                                    fontSize = 12.sp,
+                                )
+                            }
                         }
                     }
                 }

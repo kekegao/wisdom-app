@@ -10,8 +10,8 @@ plugins {
 // 备用：模拟器宿主机地址（需要时启用下面这行，并注释掉当前生效的那行）
 //val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://10.0.2.2:8083/")
 // 原局域网联调地址（保留备用，需要时启用下面这行，并注释掉当前生效的那行）
-//val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://192.168.2.2:8083/")
-val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://47.111.163.122/")
+val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://192.168.2.2:8083/")
+//val apiBaseUrl: String = providers.gradleProperty("API_BASE_URL").getOrElse("http://47.111.163.122/")
 
 // ==== 发布签名配置 ====
 // 密钥路径与密码放在项目根目录 signing.properties（已在 .gitignore 中忽略，不会进 git），

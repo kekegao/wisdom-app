@@ -3,6 +3,8 @@ package com.monkey.wisdom.data.remote.api
 import com.google.gson.JsonElement
 import com.monkey.wisdom.data.model.ApiResult
 import com.monkey.wisdom.data.model.OrderItem
+import com.monkey.wisdom.data.model.PageResult
+import com.monkey.wisdom.data.model.request.ChangePriceRequest
 import com.monkey.wisdom.data.model.request.OrderListQuery
 import com.monkey.wisdom.data.model.request.OrderOperateRequest
 import com.monkey.wisdom.data.model.request.PublishOrderRequest
@@ -32,6 +34,10 @@ interface OrderApi {
     @POST("publishOrder/dealOrder")
     suspend fun dealOrder(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
+    /** 货主修改已发布运单运费：发布(1) 状态下改价，后端同步调整运费托管冻结金额 */
+    @POST("publishOrder/changePrice")
+    suspend fun changePrice(@Body request: ChangePriceRequest): ApiResult<JsonElement>
+
     /** 货主取消承运方摘单：摘单(2) → 发布(1) */
     @POST("publishOrder/cancelAccept")
     suspend fun cancelAccept(@Body request: OrderOperateRequest): ApiResult<JsonElement>
@@ -46,9 +52,13 @@ interface OrderApi {
 
     // ==== 承运端 ====
 
-    /** 货源大厅 / 线路搜索 */
+    /** 货源大厅 / 线路搜索（全量，供首页概览等小数据量场景） */
     @POST("accept/list")
     suspend fun querySourceOrders(@Body query: SourceOrderQuery): ApiResult<List<OrderItem>>
+
+    /** 货源大厅分页查询（上拉加载更多） */
+    @POST("accept/page")
+    suspend fun querySourceOrderPage(@Body query: SourceOrderQuery): ApiResult<PageResult<OrderItem>>
 
     /** 我的运单（承运方已摘运单） */
     @POST("accept/myOrders")
