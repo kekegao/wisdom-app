@@ -3,6 +3,7 @@ package com.monkey.wisdom.data.repository
 import com.google.gson.JsonElement
 import com.monkey.wisdom.core.common.AppResult
 import com.monkey.wisdom.core.common.safeDataCall
+import com.monkey.wisdom.core.common.safeMessageCall
 import com.monkey.wisdom.core.common.safeUnitCall
 import com.monkey.wisdom.data.model.ApiResult
 import com.monkey.wisdom.data.model.OrderItem
@@ -46,8 +47,9 @@ class OrderRepositoryImpl(
     override suspend fun acceptOrder(orderId: String): AppResult<Unit> =
         operate(orderId, "摘单失败，请稍后重试") { orderApi.acceptOrder(it) }
 
-    override suspend fun shipOrder(orderId: String): AppResult<Unit> =
-        operate(orderId, "确认发货失败") { orderApi.shipOrder(it) }
+    // 确认发货成功文案取后端 message，UI 弹框展示
+    override suspend fun shipOrder(orderId: String): AppResult<String> =
+        safeMessageCall("确认发货失败") { orderApi.shipOrder(OrderOperateRequest(orderId)) }
 
     override suspend fun confirmReceipt(orderId: String): AppResult<Unit> =
         operate(orderId, "确认收货失败") { orderApi.confirmReceipt(it) }

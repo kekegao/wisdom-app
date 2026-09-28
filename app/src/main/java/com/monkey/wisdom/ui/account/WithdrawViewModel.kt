@@ -130,6 +130,9 @@ class WithdrawViewModel(
         }
     }
 
+    /** 关闭余额同步失败弹窗 */
+    fun consumeBalanceError() = _state.update { it.copy(balanceError = null) }
+
     fun onAmountChanged(text: String) = _state.update { it.copy(amountText = text) }
 
     /** 一键填入全部可用余额 */

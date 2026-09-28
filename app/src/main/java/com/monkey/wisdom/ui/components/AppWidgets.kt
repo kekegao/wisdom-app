@@ -28,12 +28,92 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.monkey.wisdom.ui.theme.BgCard
+import com.monkey.wisdom.ui.theme.BrandDanger
+import com.monkey.wisdom.ui.theme.BrandSuccess
 import com.monkey.wisdom.ui.theme.TextPrimary
 import com.monkey.wisdom.ui.theme.TextSecondary
 
 /** 轻提示，与 Web 端 toast 行为一致（短时浮层提示） */
 fun showToast(context: Context, message: String) {
     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+}
+
+/**
+ * 通用提示弹窗。
+ *
+ * 后端接口返回的结果（尤其是失败原因）必须使用弹窗展示：
+ * Toast / 行内小字容易被用户忽略，导致「点了没反应」的错觉。
+ */
+@Composable
+fun MessageDialog(
+    title: String,
+    message: String,
+    onDismiss: () -> Unit,
+    confirmText: String = "我知道了",
+    titleColor: Color = TextPrimary,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = title,
+                fontSize = 17.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = titleColor,
+            )
+        },
+        text = {
+            Text(
+                text = message,
+                fontSize = 14.sp,
+                color = TextSecondary,
+                textAlign = TextAlign.Start,
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = confirmText, color = MaterialTheme.colorScheme.primary, fontSize = 15.sp)
+            }
+        },
+        containerColor = BgCard,
+    )
+}
+
+/**
+ * 后端接口返回失败时的统一弹窗。
+ *
+ * 各页面只需把 ViewModel 中的失败文案透传进来即可。
+ */
+@Composable
+fun ErrorDialog(
+    message: String?,
+    onDismiss: () -> Unit,
+    title: String = "操作失败",
+) {
+    if (message.isNullOrBlank()) return
+    MessageDialog(title = title, message = message, onDismiss = onDismiss, titleColor = BrandDanger)
+}
+
+/**
+ * 后端接口返回成功时的统一弹窗。
+ *
+ * 成功结果同样必须弹窗展示，用户点击「确定」后弹窗消失，
+ * 避免轻提示一闪而过让用户误以为操作没生效。
+ */
+@Composable
+fun SuccessDialog(
+    message: String?,
+    onDismiss: () -> Unit,
+    title: String = "操作成功",
+) {
+    if (message.isNullOrBlank()) return
+    MessageDialog(
+        title = title,
+        message = message,
+        onDismiss = onDismiss,
+        confirmText = "确定",
+        titleColor = BrandSuccess,
+    )
 }
 
 /** 白色圆角卡片容器 */

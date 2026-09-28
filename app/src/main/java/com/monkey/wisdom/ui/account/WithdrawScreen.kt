@@ -31,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.core.util.Formatters
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.SectionCard
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.BgPage
@@ -63,6 +64,9 @@ fun WithdrawScreen(
 
     // 进入页面 / 从银行卡管理返回时刷新余额与到账账户
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    // 余额同步失败等后端错误：弹窗提示
+    ErrorDialog(message = state.balanceError, title = "余额同步失败", onDismiss = viewModel::consumeBalanceError)
 
     AppScaffold(title = "提现", onBack = onBack) { padding ->
         Column(
@@ -129,14 +133,6 @@ fun WithdrawScreen(
                             text = state.errorText,
                             modifier = Modifier.padding(top = 6.dp),
                             color = BrandDanger,
-                            fontSize = 12.sp,
-                        )
-                    }
-                    state.balanceError?.let { message ->
-                        Text(
-                            text = message,
-                            modifier = Modifier.padding(top = 6.dp),
-                            color = TextMuted,
                             fontSize = 12.sp,
                         )
                     }

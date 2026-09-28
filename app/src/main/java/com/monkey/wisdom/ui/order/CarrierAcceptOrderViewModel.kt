@@ -35,7 +35,9 @@ data class CarrierAcceptUiState(
     val confirmOrder: OrderItem? = null,
     /** 详情查看的运单 */
     val detailOrder: OrderItem? = null,
-    val toastMessage: String? = null,
+    val successMessage: String? = null,
+    /** 后端接口返回失败提示（弹窗展示） */
+    val errorDialog: String? = null,
 ) {
     /** 顶部统计口径以大厅全量货源为准 */
     val total: Int get() = allOrders.size
@@ -164,7 +166,10 @@ class CarrierAcceptOrderViewModel(
 
     fun dismissGrabConfirm() = _state.update { it.copy(confirmOrder = null) }
 
-    fun consumeToast() = _state.update { it.copy(toastMessage = null) }
+    fun consumeSuccess() = _state.update { it.copy(successMessage = null) }
+
+    /** 关闭后端失败弹窗 */
+    fun consumeErrorDialog() = _state.update { it.copy(errorDialog = null) }
 
     /** 确认摘单 */
     fun confirmGrab() {
@@ -197,12 +202,12 @@ class CarrierAcceptOrderViewModel(
                         detailOrder = state.detailOrder?.let { detail ->
                             updated.firstOrNull { it.orderId == detail.orderId } ?: detail
                         },
-                        toastMessage = "摘单成功，请及时联系货主",
+                        successMessage = "摘单成功，请及时联系货主",
                     )
                 }
 
                 is AppResult.Failure -> _state.update {
-                    it.copy(grabbingOrderId = null, toastMessage = result.message)
+                    it.copy(grabbingOrderId = null, errorDialog = result.message)
                 }
             }
         }

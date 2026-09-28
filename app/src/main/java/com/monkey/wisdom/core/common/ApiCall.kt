@@ -22,6 +22,22 @@ suspend fun safeUnitCall(
     }
 }
 
+/**
+ * 无返回数据但需要展示后端文案的操作（如承运方确认发货）。
+ *
+ * 成功时把后端 `message` 原样透传给 UI，为空时由调用方用本地文案兜底。
+ */
+suspend fun safeMessageCall(
+    fallbackMessage: String,
+    block: suspend () -> ApiResult<JsonElement>,
+): AppResult<String> = safeApiCall {
+    val result = block()
+    if (!result.isSuccess) {
+        throw ApiBusinessException(result.errorMessage ?: fallbackMessage, result.code)
+    }
+    result.message.orEmpty()
+}
+
 /** 有返回数据的操作（如充值返回最新账户快照） */
 suspend fun <T> safeDataCall(
     fallbackMessage: String,

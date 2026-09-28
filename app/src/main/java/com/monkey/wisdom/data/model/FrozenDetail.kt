@@ -27,3 +27,17 @@ data class FrozenDetail(
     val createTime: String? = null,
     val updateTime: String? = null,
 )
+
+/** 冻结明细分页结果，字段与后端 `FrozenDetailPageDto` 对齐 */
+data class FrozenDetailPage(
+    /** 当前页数据 */
+    val records: List<FrozenDetail>? = null,
+    /** 总记录数 */
+    val total: Long? = null,
+    /** 总页数 */
+    val pages: Long? = null,
+    /** 当前页码 */
+    val current: Long? = null,
+    /** 每页大小 */
+    val size: Long? = null,
+)

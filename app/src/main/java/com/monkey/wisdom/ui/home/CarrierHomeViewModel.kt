@@ -44,6 +44,9 @@ class CarrierHomeViewModel(
         refresh()
     }
 
+    /** 关闭后端失败弹窗 */
+    fun consumeError() = _state.update { it.copy(errorMessage = null) }
+
     fun refresh() {
         if (_state.value.loading) return
         viewModelScope.launch {

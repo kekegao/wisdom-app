@@ -209,6 +209,32 @@ fun FrozenDetailItemRow(
     }
 }
 
+/** 分页列表共用的「加载更多」按钮（收支明细 / 冻结明细翻页使用） */
+@Composable
+fun LoadMoreButton(
+    loading: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(50))
+            .background(BgCard)
+            .border(width = 1.dp, color = BorderLight, shape = RoundedCornerShape(50))
+            .clickable(enabled = !loading, onClick = onClick)
+            .padding(vertical = 10.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = if (loading) "加载中…" else "加载更多",
+            color = TextSecondary,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+        )
+    }
+}
+
 /**
  * 金额输入解析：空值按 0 处理，统一取两位小数（与 Web 端 `roundMoney` 一致）。
  */

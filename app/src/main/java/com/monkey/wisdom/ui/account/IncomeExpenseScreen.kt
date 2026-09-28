@@ -37,9 +37,8 @@ import com.monkey.wisdom.data.model.IncomeExpenseItem
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.EmptyBox
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.SectionCard
-import com.monkey.wisdom.ui.theme.BgCard
-import com.monkey.wisdom.ui.theme.BorderLight
 import com.monkey.wisdom.ui.theme.BrandDanger
 import com.monkey.wisdom.ui.theme.BrandInfo
 import com.monkey.wisdom.ui.theme.BrandSuccess
@@ -64,6 +63,9 @@ fun IncomeExpenseScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) { viewModel.refresh() }
+
+    // 收支明细接口返回失败：弹窗提示
+    ErrorDialog(message = state.errorMessage, title = "加载失败", onDismiss = viewModel::consumeError)
 
     AppScaffold(
         title = "收支明细",
@@ -97,17 +99,6 @@ fun IncomeExpenseScreen(
                         text = "共 ${state.total} 条记录",
                         modifier = Modifier.padding(horizontal = 4.dp),
                         color = TextMuted,
-                        fontSize = 12.sp,
-                    )
-                }
-            }
-
-            state.errorMessage?.let { message ->
-                item {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        color = BrandDanger,
                         fontSize = 12.sp,
                     )
                 }
@@ -180,7 +171,7 @@ private fun SummaryCard(
             fontWeight = FontWeight.Bold,
         )
         Text(
-            text = "资金变动实时同步自智运宝账户",
+            text = "资金变动实时同步自宝运账户",
             color = Color(0xD9FFFFFF),
             fontSize = 11.sp,
         )
@@ -293,31 +284,6 @@ private fun IncomeExpenseItemRow(item: IncomeExpenseItem) {
                 softWrap = false,
             )
         }
-    }
-}
-
-/** 加载更多按钮 */
-@Composable
-private fun LoadMoreButton(
-    loading: Boolean,
-    onClick: () -> Unit,
-) {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(50))
-            .background(BgCard)
-            .border(width = 1.dp, color = BorderLight, shape = RoundedCornerShape(50))
-            .clickable(enabled = !loading, onClick = onClick)
-            .padding(vertical = 10.dp),
-        contentAlignment = Alignment.Center,
-    ) {
-        Text(
-            text = if (loading) "加载中…" else "加载更多",
-            color = TextSecondary,
-            fontSize = 13.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
     }
 }
 

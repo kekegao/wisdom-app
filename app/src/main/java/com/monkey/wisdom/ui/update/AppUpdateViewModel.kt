@@ -122,6 +122,9 @@ class AppUpdateViewModel(
     /** 消费一次性提示 */
     fun consumeMessage() = _state.update { it.copy(message = null) }
 
+    /** 关闭下载失败弹窗 */
+    fun clearDownloadError() = _state.update { it.copy(downloadError = null) }
+
     /** 后端未下发下载地址时的默认地址：服务端静态 APK 目录 */
     private fun defaultApkUrl(): String =
         BuildConfig.API_BASE_URL.trimEnd('/') + "/app/download/monkey-wisdom.apk"

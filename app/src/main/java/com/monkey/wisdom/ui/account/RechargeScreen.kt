@@ -34,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.core.util.Formatters
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.SectionCard
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.BgPage
@@ -44,7 +45,7 @@ import com.monkey.wisdom.ui.theme.TextPrimary
 import com.monkey.wisdom.ui.theme.TextSecondary
 
 /**
- * 充值页（智运宝账户）。
+ * 充值页（宝运账户）。
  *
  * 对应 Web 端 `/recharge`：金额输入 + 快捷档位 + 支付方式选择，
  * 提交调用账户充值接口，成功后以服务端账户快照回写本地。
@@ -58,6 +59,9 @@ fun RechargeScreen(
     },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    // 充值接口返回失败：弹窗提示
+    ErrorDialog(message = state.submitError, title = "充值失败", onDismiss = viewModel::consumeSubmitError)
 
     AppScaffold(title = "充值", onBack = onBack) { padding ->
         Column(
@@ -98,9 +102,10 @@ fun RechargeScreen(
                         color = TextMuted,
                         fontSize = 12.sp,
                     )
-                    if (state.errorTextOrSubmitError.isNotEmpty()) {
+                    // 输入校验仍然行内提示；后端返回失败改为弹窗，避免被忽略
+                    if (state.errorText.isNotEmpty()) {
                         Text(
-                            text = state.errorTextOrSubmitError,
+                            text = state.errorText,
                             modifier = Modifier.padding(top = 6.dp),
                             color = BrandDanger,
                             fontSize = 12.sp,
@@ -127,7 +132,7 @@ fun RechargeScreen(
 
                 // ==== 说明 ====
                 Text(
-                    text = "所选支付渠道当前仅作展示。点击「立即充值」将发起智运宝账户充值，成功后金额实时到账可用余额，并同步账户页展示。",
+                    text = "所选支付渠道当前仅作展示。点击「立即充值」将发起宝运账户充值，成功后金额实时到账可用余额，并同步账户页展示。",
                     modifier = Modifier.padding(horizontal = 4.dp),
                     color = TextMuted,
                     fontSize = 12.sp,
@@ -159,7 +164,7 @@ fun RechargeScreen(
         AccountSuccessDialog(
             title = "充值成功",
             amount = amount,
-            tip = "已到账智运宝账户可用余额",
+            tip = "已到账宝运账户可用余额",
             onDone = onDone,
         )
     }

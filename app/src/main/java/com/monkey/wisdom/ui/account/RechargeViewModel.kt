@@ -94,6 +94,9 @@ class RechargeViewModel(
 
     fun selectChannel(channelId: String) = _state.update { it.copy(channel = channelId) }
 
+    /** 关闭充值失败弹窗 */
+    fun consumeSubmitError() = _state.update { it.copy(submitError = null) }
+
     /** 提交充值 */
     fun submit() {
         val current = _state.value

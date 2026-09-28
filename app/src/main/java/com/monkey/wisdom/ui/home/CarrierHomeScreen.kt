@@ -7,6 +7,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.di.ServiceLocator
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.navigation.AppRoute
 import com.monkey.wisdom.ui.order.OrderStatCard
 
@@ -22,15 +23,18 @@ fun CarrierHomeScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // 货源统计接口返回失败：弹窗提示（此前无任何提示，用户会以为没数据）
+    ErrorDialog(message = state.errorMessage, title = "加载失败", onDismiss = viewModel::consumeError)
+
     RoleHomeScreen(
         user = user,
-        brandTitle = "智运宝 · 承运方端",
+        brandTitle = "宝运 · 承运方端",
         subtitle = "海量货源在线摘单，承接运输全程可视",
         defaultGreeting = "尊敬的承运方",
         quickCards = listOf(
             HomeQuickCard(
                 badge = "宝",
-                title = "智运宝",
+                title = "宝运",
                 desc = "充值提现 · 运费结算",
                 accent = Color(0xFF3B82F6),
                 route = AppRoute.ACCOUNT,

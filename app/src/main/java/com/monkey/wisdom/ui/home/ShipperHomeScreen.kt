@@ -6,7 +6,7 @@ import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.ui.navigation.AppRoute
 
 /**
- * 货主端首页：智运宝账户、我的运单、发布运单等入口。
+ * 货主端首页：宝运账户、我的运单、发布运单等入口。
  */
 @Composable
 fun ShipperHomeScreen(
@@ -16,13 +16,13 @@ fun ShipperHomeScreen(
 ) {
     RoleHomeScreen(
         user = user,
-        brandTitle = "智运宝 · 货主端",
+        brandTitle = "宝运 · 货主端",
         subtitle = "发布运单、托管运费，全程可视化跟踪",
         defaultGreeting = "尊敬的货主",
         quickCards = listOf(
             HomeQuickCard(
                 badge = "宝",
-                title = "智运宝",
+                title = "宝运",
                 desc = "充值提现 · 运费托管",
                 accent = Color(0xFF3B82F6),
                 route = AppRoute.ACCOUNT,

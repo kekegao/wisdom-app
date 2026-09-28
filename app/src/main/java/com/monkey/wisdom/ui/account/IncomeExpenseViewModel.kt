@@ -49,6 +49,9 @@ class IncomeExpenseViewModel(
     /** 进入页面 / 点击刷新：重置为第一页 */
     fun refresh() = load(reset = true)
 
+    /** 关闭后端失败弹窗 */
+    fun consumeError() = _state.update { it.copy(errorMessage = null) }
+
     /** 加载下一页（无更多数据或正在请求时忽略） */
     fun loadMore() {
         if (!_state.value.hasMore) return

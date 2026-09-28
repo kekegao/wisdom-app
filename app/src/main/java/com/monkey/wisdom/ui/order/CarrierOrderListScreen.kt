@@ -10,15 +10,23 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Call
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,9 +43,10 @@ import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.ConfirmDialog
 import com.monkey.wisdom.ui.components.EmptyBox
 import com.monkey.wisdom.ui.components.ErrorBox
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.LoadingBox
 import com.monkey.wisdom.ui.components.SectionCard
-import com.monkey.wisdom.ui.components.showToast
+import com.monkey.wisdom.ui.components.SuccessDialog
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.TextMuted
 import com.monkey.wisdom.ui.theme.TextSecondary
@@ -54,14 +63,12 @@ fun CarrierOrderListScreen(
     viewModel: CarrierOrderListViewModel = viewModel { CarrierOrderListViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(state.toastMessage) {
-        state.toastMessage?.let { message ->
-            showToast(context, message)
-            viewModel.consumeToast()
-        }
-    }
+    // 后端接口返回成功：弹窗提示，用户点「确定」后关闭
+    SuccessDialog(message = state.successMessage, onDismiss = viewModel::consumeSuccess)
+
+    // 确认发货 / 确认收货 / 对账失败：弹窗提示
+    ErrorDialog(message = state.errorDialog, onDismiss = viewModel::consumeErrorDialog)
 
     val detailOrder = state.detailOrder
     if (detailOrder != null) {
@@ -215,13 +222,34 @@ private fun CarrierOrderCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
                 Text(text = "单号 ${order.orderId}", color = TextSecondary, fontSize = 12.sp)
-                Text(
-                    text = "货主 ${displayOrDash(order.shipperName ?: order.shipperUserName)} ${Formatters.maskMobile(order.shipperMobile)}",
-                    color = TextMuted,
-                    fontSize = 12.sp,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    // 已是承运方自己的运单：展示货主真实号码并提供一键拨号
+                    Text(
+                        text = "货主 ${displayOrDash(order.shipperName ?: order.shipperUserName)} ${order.shipperMobile.orEmpty()}",
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                    )
+                    val mobile = order.shipperMobile
+                    if (!mobile.isNullOrBlank()) {
+                        val context = LocalContext.current
+                        IconButton(
+                            modifier = Modifier.size(24.dp),
+                            onClick = { dialMobile(context, mobile) },
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = "拨打货主电话",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+                }
             }
             StatusBadge(
                 text = carrierOrderStatusText(order.status, order.statusDesc),
@@ -280,5 +308,12 @@ private fun CarrierOrderCard(
                 CardActionButton(text = "查看详情", onClick = onDetail)
             }
         }
+    }
+}
+
+/** 调起系统拨号界面（不申请权限，仅跳转到拨号盘） */
+private fun dialMobile(context: Context, mobile: String) {
+    runCatching {
+        context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$mobile")))
     }
 }

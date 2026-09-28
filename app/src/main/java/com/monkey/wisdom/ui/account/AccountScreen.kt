@@ -40,6 +40,7 @@ import com.monkey.wisdom.data.model.FrozenDetail
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.EmptyBox
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.SectionCard
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.BrandDanger
@@ -70,16 +71,21 @@ fun AccountScreen(
     // 进入账户页 / 从充值、提现、银行卡页返回时同步最新余额
     LaunchedEffect(Unit) { viewModel.loadAccount() }
 
+    // 账户接口返回失败：弹窗提示，避免一行小红字被忽略
+    ErrorDialog(message = state.errorMessage, title = "账户信息加载失败", onDismiss = viewModel::consumeError)
+    ErrorDialog(message = state.frozenError, title = "冻结明细加载失败", onDismiss = viewModel::consumeError)
+
     if (state.showFrozenDetail) {
         FrozenDetailScreen(
             state = state,
             onBack = viewModel::closeFrozenDetail,
-            onRefresh = viewModel::loadFrozenDetails,
+            onRefresh = viewModel::refreshFrozenDetails,
+            onLoadMore = viewModel::loadMoreFrozenDetails,
         )
         return
     }
 
-    AppScaffold(title = "智运宝", onBack = onBack) { padding ->
+    AppScaffold(title = "宝运", onBack = onBack) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -99,10 +105,6 @@ fun AccountScreen(
                     onRecharge = onRecharge,
                     onWithdraw = onWithdraw,
                 )
-
-                state.errorMessage?.let { message ->
-                    Text(text = message, color = BrandDanger, fontSize = 12.sp)
-                }
 
                 // ==== 余额明细 ====
                 DetailCard(account = state.account, onFrozenDetail = viewModel::openFrozenDetail)
@@ -328,6 +330,7 @@ private fun FrozenDetailScreen(
     state: AccountUiState,
     onBack: () -> Unit,
     onRefresh: () -> Unit,
+    onLoadMore: () -> Unit,
 ) {
     AppScaffold(
         title = "冻结明细",
@@ -362,7 +365,7 @@ private fun FrozenDetailScreen(
                 ) {
                     Text(text = "当前冻结总额（元）", color = Color(0xEBFFFFFF), fontSize = 13.sp)
                     Text(
-                        text = "¥ ${Formatters.money(state.frozenTotal)}",
+                        text = "¥ ${Formatters.money(state.frozenTotalAmount)}",
                         color = Color.White,
                         fontSize = 30.sp,
                         fontWeight = FontWeight.Bold,
@@ -385,7 +388,7 @@ private fun FrozenDetailScreen(
                         fontSize = 12.sp,
                     )
 
-                    state.frozenDetails.isNotEmpty() -> Text(
+                    state.frozenCount > 0 -> Text(
                         text = "共 ${state.frozenCount} 笔冻结记录",
                         modifier = Modifier.padding(horizontal = 4.dp),
                         color = TextMuted,
@@ -394,18 +397,7 @@ private fun FrozenDetailScreen(
                 }
             }
 
-            state.frozenError?.let { message ->
-                item {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(horizontal = 4.dp),
-                        color = BrandDanger,
-                        fontSize = 12.sp,
-                    )
-                }
-            }
-
-            if (state.frozenDetails.isEmpty()) {
+            if (state.frozenDetails.isEmpty() && !state.frozenLoading) {
                 item {
                     EmptyBox(
                         text = "暂无冻结明细\n进行中的运单运费托管或提现将显示在这里",
@@ -414,20 +406,38 @@ private fun FrozenDetailScreen(
                         modifier = Modifier.height(220.dp),
                     )
                 }
-            } else {
-                items(
-                    items = state.frozenDetails,
-                    key = { it.id ?: (it.orderNo ?: "") + (it.amount ?: "") },
-                ) { detail: FrozenDetail ->
-                    SectionCard {
-                        FrozenDetailItemRow(
-                            bizTypeName = detail.bizTypeName ?: "运费托管",
-                            orderNo = detail.orderNo ?: "-",
-                            amount = detail.amount ?: "0",
-                            frozenTime = Formatters.time(detail.frozenTime),
-                            statusText = detail.statusDesc ?: "处理中",
-                        )
-                    }
+            }
+
+            items(
+                items = state.frozenDetails,
+                key = { it.id ?: (it.orderNo ?: "") + (it.amount ?: "") },
+            ) { detail: FrozenDetail ->
+                SectionCard {
+                    FrozenDetailItemRow(
+                        bizTypeName = detail.bizTypeName ?: "运费托管",
+                        orderNo = detail.orderNo ?: "-",
+                        amount = detail.amount ?: "0",
+                        frozenTime = Formatters.time(detail.frozenTime),
+                        statusText = detail.statusDesc ?: "处理中",
+                    )
+                }
+            }
+
+            if (state.frozenHasMore) {
+                item {
+                    LoadMoreButton(loading = state.frozenLoadingMore, onClick = onLoadMore)
+                }
+            } else if (state.frozenDetails.isNotEmpty()) {
+                item {
+                    Text(
+                        text = "没有更多了",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 4.dp),
+                        color = TextMuted,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
 

@@ -19,6 +19,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.BuildConfig
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
+import com.monkey.wisdom.ui.components.ErrorDialog
+import com.monkey.wisdom.ui.components.MessageDialog
 import com.monkey.wisdom.ui.components.PrimaryButton
 import com.monkey.wisdom.ui.components.SectionCard
 import com.monkey.wisdom.ui.components.showToast
@@ -42,11 +44,13 @@ fun AppUpdateScreen(
 
     LaunchedEffect(Unit) { viewModel.checkUpdate(manual = false) }
 
-    state.message?.let { message ->
-        LaunchedEffect(message) {
-            showToast(context, message)
-            viewModel.consumeMessage()
-        }
+    // 检查结果提示（已是最新 / 检查失败）：弹窗展示
+    if (state.message != null) {
+        MessageDialog(
+            title = "检查更新",
+            message = state.message.orEmpty(),
+            onDismiss = viewModel::consumeMessage,
+        )
     }
 
     AppUpdateDialog(
@@ -56,6 +60,9 @@ fun AppUpdateScreen(
         onBrowserDownload = { viewModel.downloadByBrowser(context) },
         onDismiss = viewModel::dismissUpdate,
     )
+
+    // 下载失败：弹窗提示
+    ErrorDialog(message = state.downloadError, title = "下载失败", onDismiss = viewModel::clearDownloadError)
 
     AppScaffold(title = "检查更新", onBack = onBack) { padding ->
         Column(
@@ -74,7 +81,7 @@ fun AppUpdateScreen(
                         fontSize = 22.sp,
                     )
                     Text(
-                        text = "智运宝 · 智慧物流运单平台",
+                        text = "宝运 · 智慧物流运单平台",
                         color = TextMuted,
                         fontSize = 12.sp,
                     )

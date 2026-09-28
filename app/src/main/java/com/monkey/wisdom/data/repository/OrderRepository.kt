@@ -38,8 +38,12 @@ interface OrderRepository {
     /** 承运方摘单 */
     suspend fun acceptOrder(orderId: String): AppResult<Unit>
 
-    /** 承运方确认发货 */
-    suspend fun shipOrder(orderId: String): AppResult<Unit>
+    /**
+     * 承运方确认发货
+     *
+     * @return 成功后携带后端返回的提示文案，供 UI 弹框展示（为空时 UI 用本地文案兜底）
+     */
+    suspend fun shipOrder(orderId: String): AppResult<String>
 
     /** 承运方确认收货 */
     suspend fun confirmReceipt(orderId: String): AppResult<Unit>

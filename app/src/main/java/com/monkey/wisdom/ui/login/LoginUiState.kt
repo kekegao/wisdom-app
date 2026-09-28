@@ -20,8 +20,10 @@ data class LoginUiState(
     val loading: Boolean = false,
     /** 表单错误提示 */
     val errorMessage: String? = null,
-    /** 一次性提示（如注册成功） */
-    val toastMessage: String? = null,
+    /** 后端接口返回失败提示（弹窗展示，避免一行小字被忽略） */
+    val serverError: String? = null,
+    /** 一次性成功提示（如注册成功），弹窗展示后由 UI 消费 */
+    val successMessage: String? = null,
     /** 登录成功事件，由 UI 消费后跳转 */
     val loggedInUser: UserInfo? = null,
 

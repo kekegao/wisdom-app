@@ -49,7 +49,9 @@ data class PublishOrderListUiState(
     val confirmAction: OrderConfirmAction? = null,
     val confirmOrder: OrderItem? = null,
     val submitting: Boolean = false,
-    val toastMessage: String? = null,
+    val successMessage: String? = null,
+    /** 后端接口返回失败提示（弹窗展示） */
+    val errorDialog: String? = null,
 ) {
 
     val tabs: List<ShipperOrderTab> get() = ShipperOrderTab.entries
@@ -127,8 +129,13 @@ class PublishOrderListViewModel(
         _state.update { it.copy(confirmAction = null, confirmOrder = null) }
     }
 
-    fun consumeToast() {
-        _state.update { it.copy(toastMessage = null) }
+    fun consumeSuccess() {
+        _state.update { it.copy(successMessage = null) }
+    }
+
+    /** 关闭后端失败弹窗 */
+    fun consumeErrorDialog() {
+        _state.update { it.copy(errorDialog = null) }
     }
 
     /** 提交二次确认操作 */
@@ -172,7 +179,7 @@ class PublishOrderListViewModel(
                             detailOrder = state.detailOrder?.let { detail ->
                                 updated.firstOrNull { it.orderId == detail.orderId } ?: detail
                             },
-                            toastMessage = message,
+                            successMessage = message,
                         )
                     }
                 }
@@ -182,7 +189,7 @@ class PublishOrderListViewModel(
                         submitting = false,
                         confirmAction = null,
                         confirmOrder = null,
-                        toastMessage = result.message,
+                        errorDialog = result.message,
                     )
                 }
             }

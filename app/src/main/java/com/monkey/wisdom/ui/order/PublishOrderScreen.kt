@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -26,12 +25,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.FormBanner
-import com.monkey.wisdom.ui.components.FormChips
+import com.monkey.wisdom.ui.components.FormDropdown
 import com.monkey.wisdom.ui.components.FormInput
 import com.monkey.wisdom.ui.components.FormSection
 import com.monkey.wisdom.ui.components.FormTextArea
-import com.monkey.wisdom.ui.components.showToast
+import com.monkey.wisdom.ui.components.SuccessDialog
 import com.monkey.wisdom.ui.theme.BgCard
 
 /**
@@ -46,15 +46,25 @@ fun PublishOrderScreen(
     viewModel: PublishOrderViewModel = viewModel { PublishOrderViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    // 发布成功后直接回到订单列表，不停留在已提交的表单页
-    LaunchedEffect(state.published) {
-        if (state.published) {
-            showToast(context, "订单发布成功")
-            onViewOrders()
-        }
+    // 发布成功：弹窗提示，用户点「确定」后再回到订单列表，不停留在已提交的表单页
+    if (state.published) {
+        SuccessDialog(
+            message = "订单发布成功",
+            title = "发布成功",
+            onDismiss = {
+                viewModel.consumePublished()
+                onViewOrders()
+            },
+        )
     }
+
+    // 后端返回失败：弹窗提示，避免行内小字被忽略
+    ErrorDialog(
+        message = state.submitError,
+        title = "发布失败",
+        onDismiss = viewModel::consumeSubmitError,
+    )
 
     AppScaffold(title = "发布运单", onBack = onBack) { padding ->
         Column(
@@ -72,10 +82,11 @@ fun PublishOrderScreen(
             ) {
                 // ==== 货物信息 ====
                 FormSection(title = "货物信息", subtitle = "先描述要运输的货物") {
-                    Text(text = "物品类型", color = androidx.compose.ui.graphics.Color(0xFF64748B), fontSize = 13.sp)
-                    FormChips(
+                    FormDropdown(
+                        label = "物品类型",
                         options = PublishOrderFormState.GOODS_TYPE_OPTIONS,
                         selected = state.goodsType,
+                        placeholder = "请选择物品类型",
                         onSelect = viewModel::onGoodsTypeSelected,
                     )
                     if (state.isCustomGoodsType) {

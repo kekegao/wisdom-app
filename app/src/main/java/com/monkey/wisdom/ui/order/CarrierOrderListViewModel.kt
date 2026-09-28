@@ -55,7 +55,9 @@ data class CarrierOrderListUiState(
     val confirmOrder: OrderItem? = null,
     val submitting: Boolean = false,
     val detailOrder: OrderItem? = null,
-    val toastMessage: String? = null,
+    val successMessage: String? = null,
+    /** 后端接口返回失败提示（弹窗展示） */
+    val errorDialog: String? = null,
 ) {
 
     val visibleOrders: List<OrderItem>
@@ -118,7 +120,10 @@ class CarrierOrderListViewModel(
 
     fun dismissConfirm() = _state.update { it.copy(confirmAction = null, confirmOrder = null) }
 
-    fun consumeToast() = _state.update { it.copy(toastMessage = null) }
+    fun consumeSuccess() = _state.update { it.copy(successMessage = null) }
+
+    /** 关闭后端失败弹窗 */
+    fun consumeErrorDialog() = _state.update { it.copy(errorDialog = null) }
 
     /** 提交发货 / 收货确认，成功后重新拉取以保证状态与服务端一致 */
     fun submitConfirm() {
@@ -129,20 +134,22 @@ class CarrierOrderListViewModel(
 
         viewModelScope.launch {
             _state.update { it.copy(submitting = true) }
-            val result = when (action) {
+            val result: AppResult<Any?> = when (action) {
                 CarrierConfirmAction.SHIP -> orderRepository.shipOrder(order.orderId)
                 CarrierConfirmAction.RECEIPT -> orderRepository.confirmReceipt(order.orderId)
                 CarrierConfirmAction.RECONCILE -> orderRepository.reconcileOrder(order.orderId)
             }
+            // 确认发货成功时优先展示后端返回的文案，后端没给才回退本地文案
+            val backendMessage = (result as? AppResult.Success<*>)?.data as? String
             _state.update {
                 it.copy(
                     submitting = false,
                     confirmAction = null,
                     confirmOrder = null,
-                    toastMessage = when (result) {
-                        is AppResult.Success -> action.successMessage
-                        is AppResult.Failure -> result.message
+                    successMessage = (result as? AppResult.Success<*>)?.let {
+                        backendMessage?.takeIf { msg -> msg.isNotBlank() } ?: action.successMessage
                     },
+                    errorDialog = (result as? AppResult.Failure)?.message,
                 )
             }
             if (result is AppResult.Success) {

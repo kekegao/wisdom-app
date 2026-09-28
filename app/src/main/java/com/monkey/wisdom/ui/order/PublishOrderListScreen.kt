@@ -44,10 +44,11 @@ import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.ConfirmDialog
 import com.monkey.wisdom.ui.components.EmptyBox
 import com.monkey.wisdom.ui.components.ErrorBox
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.InfoRow
 import com.monkey.wisdom.ui.components.LoadingBox
 import com.monkey.wisdom.ui.components.SectionCard
-import com.monkey.wisdom.ui.components.showToast
+import com.monkey.wisdom.ui.components.SuccessDialog
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.TextMuted
 import com.monkey.wisdom.ui.theme.TextPrimary
@@ -65,17 +66,15 @@ fun PublishOrderListScreen(
     viewModel: PublishOrderListViewModel = viewModel { PublishOrderListViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(state.toastMessage) {
-        state.toastMessage?.let { message ->
-            showToast(context, message)
-            viewModel.consumeToast()
-        }
-    }
+    // 后端接口返回成功：弹窗提示，用户点「确定」后关闭
+    SuccessDialog(message = state.successMessage, onDismiss = viewModel::consumeSuccess)
 
     // 进入页面或从发布页返回时刷新，保证刚发布的运单立即可见
     LaunchedEffect(Unit) { viewModel.loadOrders() }
+
+    // 运单操作（成交 / 取消摘单 / 回单确认 / 结算申请）失败：弹窗提示
+    ErrorDialog(message = state.errorDialog, onDismiss = viewModel::consumeErrorDialog)
 
     val detailOrder = state.detailOrder
     if (detailOrder != null) {
@@ -396,13 +395,14 @@ fun OrderDetailScreen(
                         carrierRegion = regionText(order.carrierProvince, order.carrierCity, order.carrierArea),
                         carrierAddress = order.carrierAddress,
                     )
-                    if (showShipperContact && !order.shipperName.isNullOrBlank()) {
+                    val contactName = order.shipperName ?: order.shipperUserName
+                    if (showShipperContact && (!contactName.isNullOrBlank() || !order.shipperMobile.isNullOrBlank())) {
                         Row(
                             modifier = Modifier.padding(top = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Text(
-                                text = "联系人：${order.shipperName} ${if (showCallButton) order.shipperMobile.orEmpty() else Formatters.maskMobile(order.shipperMobile)}",
+                                text = "联系人：${displayOrDash(contactName)} ${if (showCallButton) order.shipperMobile.orEmpty() else Formatters.maskMobile(order.shipperMobile)}",
                                 modifier = Modifier.weight(1f),
                                 color = TextSecondary,
                                 fontSize = 13.sp,

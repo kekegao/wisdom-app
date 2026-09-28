@@ -2,8 +2,9 @@ package com.monkey.wisdom.data.remote.api
 
 import com.monkey.wisdom.data.model.AccountInfo
 import com.monkey.wisdom.data.model.ApiResult
-import com.monkey.wisdom.data.model.FrozenDetail
+import com.monkey.wisdom.data.model.FrozenDetailPage
 import com.monkey.wisdom.data.model.IncomeExpensePage
+import com.monkey.wisdom.data.model.request.FrozenDetailQuery
 import com.monkey.wisdom.data.model.request.IncomeExpenseQuery
 import com.monkey.wisdom.data.model.request.RechargeRequest
 import retrofit2.http.Body
@@ -22,9 +23,9 @@ interface AccountApi {
     @POST("account/recharge")
     suspend fun recharge(@Body request: RechargeRequest): ApiResult<AccountInfo>
 
-    /** 冻结中明细列表（返回体 data 为数组） */
+    /** 冻结明细列表（返回体 data 为分页对象，分页口径与收支流水一致） */
     @POST("frozenDetail/list")
-    suspend fun queryFrozenDetails(@Body body: HashMap<String, Any?>): ApiResult<List<FrozenDetail>>
+    suspend fun queryFrozenDetails(@Body query: FrozenDetailQuery): ApiResult<FrozenDetailPage>
 
     /** 收支流水列表（返回体 data 为分页对象） */
     @POST("incomeExpense/list")

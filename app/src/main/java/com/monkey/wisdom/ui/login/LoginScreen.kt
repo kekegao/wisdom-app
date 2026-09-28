@@ -41,8 +41,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.core.constants.UserType
 import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.ui.components.AppTextField
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.FormErrorText
+import com.monkey.wisdom.ui.components.MessageDialog
 import com.monkey.wisdom.ui.components.PrimaryButton
+import com.monkey.wisdom.ui.components.SuccessDialog
 import com.monkey.wisdom.ui.components.UserTypeSelector
 import com.monkey.wisdom.ui.theme.PageGradientEnd
 import com.monkey.wisdom.ui.theme.PageGradientStart
@@ -74,20 +77,20 @@ fun LoginScreen(
         }
     }
 
-    // 会话过期等外部提示：先展示再回调，避免状态清空导致提示被打断
-    LaunchedEffect(hintMessage) {
-        hintMessage?.let { message ->
-            snackbarHostState.showSnackbar(message)
-            onHintShown()
-        }
+    // 后端接口返回失败：弹窗提示（登录 / 注册失败原因必须让用户明确看到）
+    ErrorDialog(
+        message = uiState.serverError,
+        title = if (uiState.mode == AuthMode.LOGIN) "登录失败" else "注册失败",
+        onDismiss = viewModel::consumeServerError,
+    )
+
+    // 会话过期等外部提示：弹窗展示并回调消费，避免轻量提示被忽略
+    if (!hintMessage.isNullOrBlank()) {
+        MessageDialog(title = "提示", message = hintMessage, onDismiss = onHintShown)
     }
 
-    LaunchedEffect(uiState.toastMessage) {
-        uiState.toastMessage?.let { message ->
-            viewModel.consumeToastMessage()
-            snackbarHostState.showSnackbar(message)
-        }
-    }
+    // 后端接口返回成功（如注册成功）：弹窗提示，用户点「确定」后关闭
+    SuccessDialog(message = uiState.successMessage, onDismiss = viewModel::consumeSuccessMessage)
 
     Box(
         modifier = modifier

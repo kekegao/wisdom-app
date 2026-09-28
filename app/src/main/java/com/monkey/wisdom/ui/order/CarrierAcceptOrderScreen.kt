@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,9 +45,10 @@ import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.ConfirmDialog
 import com.monkey.wisdom.ui.components.EmptyBox
 import com.monkey.wisdom.ui.components.ErrorBox
+import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.LoadingBox
 import com.monkey.wisdom.ui.components.SectionCard
-import com.monkey.wisdom.ui.components.showToast
+import com.monkey.wisdom.ui.components.SuccessDialog
 import com.monkey.wisdom.ui.theme.BgCard
 import com.monkey.wisdom.ui.theme.BorderLight
 import com.monkey.wisdom.ui.theme.BrandSuccess
@@ -68,14 +68,12 @@ fun CarrierAcceptOrderScreen(
     viewModel: CarrierAcceptOrderViewModel = viewModel { CarrierAcceptOrderViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val context = LocalContext.current
 
-    LaunchedEffect(state.toastMessage) {
-        state.toastMessage?.let { message ->
-            showToast(context, message)
-            viewModel.consumeToast()
-        }
-    }
+    // 后端接口返回成功：弹窗提示，用户点「确定」后关闭
+    SuccessDialog(message = state.successMessage, onDismiss = viewModel::consumeSuccess)
+
+    // 摘单失败：弹窗提示
+    ErrorDialog(message = state.errorDialog, title = "摘单失败", onDismiss = viewModel::consumeErrorDialog)
 
     val detailOrder = state.detailOrder
     if (detailOrder != null) {
@@ -84,6 +82,8 @@ fun CarrierAcceptOrderScreen(
             statusText = sourceStatusText(detailOrder.status),
             statusStyle = sourceStatusStyle(detailOrder.status),
             onBack = viewModel::closeDetail,
+            showShipperContact = true,
+            showCallButton = true,
             actionBar = {
                 Row(
                     modifier = Modifier

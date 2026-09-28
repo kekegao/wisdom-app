@@ -49,8 +49,11 @@ data class PublishOrderFormState(
     val carrierMobile: String = "",
 
     // ==== 提交态 ====
+    /** 表单校验提示（行内展示） */
     val errorMessage: String? = null,
     val submitting: Boolean = false,
+    /** 后端接口返回失败提示（弹窗展示，避免用户忽略） */
+    val submitError: String? = null,
     /** 发布成功标记：界面据此直接跳转订单列表，不再停留在已提交的表单页 */
     val published: Boolean = false,
 ) {
@@ -63,7 +66,7 @@ data class PublishOrderFormState(
 
     companion object {
         const val CUSTOM_GOODS_TYPE = "其他"
-        val GOODS_TYPE_OPTIONS = listOf("建材", "钢铁", "煤炭", CUSTOM_GOODS_TYPE)
+        val GOODS_TYPE_OPTIONS = listOf("建材", "钢铁", "煤炭", "生活物品", CUSTOM_GOODS_TYPE)
     }
 }
 
@@ -99,7 +102,17 @@ class PublishOrderViewModel(
 
     /** 清空错误提示 */
     fun clearMessages() {
-        _state.update { it.copy(errorMessage = null) }
+        _state.update { it.copy(errorMessage = null, submitError = null) }
+    }
+
+    /** 关闭后端失败弹窗 */
+    fun consumeSubmitError() {
+        _state.update { it.copy(submitError = null) }
+    }
+
+    /** 发布成功弹窗已消费 */
+    fun consumePublished() {
+        _state.update { it.copy(published = false) }
     }
 
     /** 提交发布 */
@@ -114,7 +127,7 @@ class PublishOrderViewModel(
         }
 
         viewModelScope.launch {
-            _state.update { it.copy(submitting = true, errorMessage = null) }
+            _state.update { it.copy(submitting = true, errorMessage = null, submitError = null) }
             when (val result = orderRepository.publishOrder(buildRequest(current))) {
                 is AppResult.Success -> _state.update { state ->
                     // 与 Web 端一致：发布成功后清空货物与地址，保留货主信息；
@@ -143,7 +156,7 @@ class PublishOrderViewModel(
                 is AppResult.Failure -> _state.update { state ->
                     state.copy(
                         submitting = false,
-                        errorMessage = result.message,
+                        submitError = result.message,
                     )
                 }
             }

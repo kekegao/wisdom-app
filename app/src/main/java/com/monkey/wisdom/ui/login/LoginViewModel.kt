@@ -45,7 +45,7 @@ class LoginViewModel(
 
     /** 切换登录 / 注册模式，并清空历史提示 */
     fun switchMode(mode: AuthMode) = _uiState.update {
-        it.copy(mode = mode, errorMessage = null, toastMessage = null)
+        it.copy(mode = mode, errorMessage = null, serverError = null, successMessage = null)
     }
 
     // ==== 提交动作 ====
@@ -70,7 +70,7 @@ class LoginViewModel(
                 }
 
                 is AppResult.Failure -> _uiState.update {
-                    it.copy(loading = false, errorMessage = result.message)
+                    it.copy(loading = false, serverError = result.message)
                 }
             }
         }
@@ -108,12 +108,12 @@ class LoginViewModel(
                         mode = AuthMode.LOGIN,
                         loginMobile = request.mobile,
                         loginPassword = "",
-                        toastMessage = "注册成功，请登录",
+                        successMessage = "注册成功，请登录",
                     )
                 }
 
                 is AppResult.Failure -> _uiState.update {
-                    it.copy(loading = false, errorMessage = result.message)
+                    it.copy(loading = false, serverError = result.message)
                 }
             }
         }
@@ -123,7 +123,10 @@ class LoginViewModel(
     fun consumeLoggedInUser() = _uiState.update { it.copy(loggedInUser = null) }
 
     /** 一次性提示已消费 */
-    fun consumeToastMessage() = _uiState.update { it.copy(toastMessage = null) }
+    fun consumeSuccessMessage() = _uiState.update { it.copy(successMessage = null) }
+
+    /** 关闭后端失败弹窗 */
+    fun consumeServerError() = _uiState.update { it.copy(serverError = null) }
 
     /** 输入变更时清空错误提示，避免旧错误残留 */
     private fun updateForm(transform: (LoginUiState) -> LoginUiState) =
