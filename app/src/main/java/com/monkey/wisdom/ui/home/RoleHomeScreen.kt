@@ -1,5 +1,8 @@
 package com.monkey.wisdom.ui.home
 
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,13 +17,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,9 +42,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.monkey.wisdom.core.util.Formatters
+import com.monkey.wisdom.core.util.LocationHelper
 import com.monkey.wisdom.data.model.UserInfo
 import com.monkey.wisdom.ui.components.ConfirmDialog
 import com.monkey.wisdom.ui.components.showToast
@@ -64,6 +76,19 @@ data class HomeServiceItem(
     val route: String? = null,
 )
 
+/** 首页左上角定位展示状态 */
+private sealed interface LocationUiState {
+    /** 尚未开始（等待授权） */
+    data object Idle : LocationUiState
+
+    data object Loading : LocationUiState
+
+    data class Ready(val address: String) : LocationUiState
+
+    /** message 会直接显示在 Chip 上，例如「定位失败，点击重试」 */
+    data class Failed(val message: String) : LocationUiState
+}
+
 /**
  * 货主端 / 承运方端首页共用的页面实现，差异通过列表配置注入，避免重复代码。
  *
@@ -83,6 +108,52 @@ fun RoleHomeScreen(
 ) {
     val context = LocalContext.current
     var showLogoutConfirm by remember { mutableStateOf(false) }
+    var locationState by remember { mutableStateOf<LocationUiState>(LocationUiState.Idle) }
+    var locationAttempt by remember { mutableIntStateOf(0) }
+
+    val locationPermissions = arrayOf(
+        Manifest.permission.ACCESS_FINE_LOCATION,
+        Manifest.permission.ACCESS_COARSE_LOCATION,
+    )
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { results ->
+        if (results.values.any { it }) {
+            locationAttempt++
+        } else {
+            locationState = LocationUiState.Failed("定位未授权")
+            showToast(context, "未授予定位权限，无法获取当前位置")
+        }
+    }
+
+    LaunchedEffect(locationAttempt) {
+        if (!LocationHelper.hasLocationPermission(context)) {
+            // 首次进入先申请权限；已被永久拒绝时（locationAttempt > 0）只改文案，不再重复弹系统弹窗
+            if (locationAttempt == 0) {
+                permissionLauncher.launch(locationPermissions)
+            } else {
+                locationState = LocationUiState.Failed("定位未授权")
+            }
+            return@LaunchedEffect
+        }
+
+        locationState = LocationUiState.Loading
+        when (val result = LocationHelper.fetchCurrentLocation(context)) {
+            is LocationHelper.Result.Success -> locationState = LocationUiState.Ready(result.address)
+            is LocationHelper.Result.Failure -> {
+                locationState = LocationUiState.Failed("定位失败，点击重试")
+                showToast(context, result.reason)
+            }
+        }
+    }
+
+    val locationText = when (val state = locationState) {
+        LocationUiState.Idle -> "点击定位"
+        LocationUiState.Loading -> "定位中..."
+        is LocationUiState.Ready -> state.address
+        is LocationUiState.Failed -> state.message
+    }
 
     Column(
         modifier = Modifier
@@ -95,9 +166,17 @@ fun RoleHomeScreen(
     ) {
         HeroHeader(
             brandTitle = brandTitle,
+            locationAddress = locationText,
             greeting = "你好，${Formatters.displayName(user, defaultGreeting)}",
             subtitle = subtitle,
             onLogoutClick = { showLogoutConfirm = true },
+            onLocationClick = {
+                if (LocationHelper.hasLocationPermission(context)) {
+                    locationAttempt++
+                } else {
+                    permissionLauncher.launch(locationPermissions)
+                }
+            },
         )
 
         headerContent?.invoke()
@@ -142,9 +221,11 @@ fun RoleHomeScreen(
 @Composable
 private fun HeroHeader(
     brandTitle: String,
+    locationAddress: String,
     greeting: String,
     subtitle: String,
     onLogoutClick: () -> Unit,
+    onLocationClick: () -> Unit,
 ) {
     Box(
         modifier = Modifier
@@ -159,30 +240,10 @@ private fun HeroHeader(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Row(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Color(0x29FFFFFF))
-                        .padding(horizontal = 12.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(22.dp)
-                            .clip(CircleShape)
-                            .background(Color(0x38FFFFFF)),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(text = "宝", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Text(
-                        text = brandTitle,
-                        color = Color.White,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
+                LocationChip(
+                    address = locationAddress,
+                    onClick = onLocationClick,
+                )
 
                 Text(
                     text = "退出登录",
@@ -195,7 +256,14 @@ private fun HeroHeader(
                 )
             }
 
-            Spacer(modifier = Modifier.height(14.dp))
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = brandTitle,
+                color = Color(0xCCFFFFFF),
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = greeting,
                 color = Color.White,
@@ -209,6 +277,46 @@ private fun HeroHeader(
                 fontSize = 13.sp,
             )
         }
+    }
+}
+
+/** 首页左上角「当前位置」Chip */
+@Composable
+private fun LocationChip(
+    address: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .clip(RoundedCornerShape(50))
+            .background(Color(0x29FFFFFF))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            imageVector = Icons.Default.LocationOn,
+            contentDescription = "定位",
+            tint = Color.White,
+            modifier = Modifier.size(16.dp),
+        )
+        Text(
+            text = address,
+            color = Color.White,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.widthIn(max = 180.dp),
+        )
+        Icon(
+            imageVector = Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+            tint = Color.White,
+            modifier = Modifier.size(16.dp),
+        )
     }
 }
 

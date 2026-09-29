@@ -44,10 +44,10 @@ interface OrderRepository {
     /** 货主取消承运方摘单 */
     suspend fun cancelAccept(orderId: String): AppResult<Unit>
 
-    /** 货主回单确认 */
+    /** 货主确认收货 */
     suspend fun receiptConfirm(orderId: String): AppResult<Unit>
 
-    /** 货主结算申请 */
+    /** 货主运费结算 */
     suspend fun settleApply(orderId: String): AppResult<Unit>
 
     /** 承运方摘单 */
@@ -60,7 +60,7 @@ interface OrderRepository {
      */
     suspend fun shipOrder(orderId: String): AppResult<String>
 
-    /** 承运方确认收货 */
+    /** 承运方卸货 */
     suspend fun confirmReceipt(orderId: String): AppResult<Unit>
 
     /** 承运方对账：确认清算金额并触发资金结算 */

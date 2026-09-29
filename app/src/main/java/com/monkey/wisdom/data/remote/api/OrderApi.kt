@@ -42,11 +42,11 @@ interface OrderApi {
     @POST("publishOrder/cancelAccept")
     suspend fun cancelAccept(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
-    /** 货主回单确认：确认收货(5) → 回单确认(6) */
+    /** 货主确认收货：卸货(5) → 确认收货(6) */
     @POST("publishOrder/receiptConfirm")
     suspend fun receiptConfirm(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
-    /** 货主结算申请：回单确认(6) → 结算申请(7) */
+    /** 货主运费结算：确认收货(6) → 货主运费结算(7) */
     @POST("publishOrder/settleApply")
     suspend fun settleApply(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
@@ -72,11 +72,11 @@ interface OrderApi {
     @POST("accept/shipOrder")
     suspend fun shipOrder(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
-    /** 确认收货：发货(4) → 确认收货(5) */
+    /** 卸货：发货(4) → 卸货(5) */
     @POST("accept/confirmReceipt")
     suspend fun confirmReceipt(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 
-    /** 承运方对账：结算申请(7) -> 对账(9)，确认清算金额并触发资金结算 */
+    /** 承运方对账：货主运费结算(7) -> 承运方运费结算(8)，确认清算金额并完成运费划账，运单完结 */
     @POST("accept/reconcileOrder")
     suspend fun reconcileOrder(@Body request: OrderOperateRequest): ApiResult<JsonElement>
 }

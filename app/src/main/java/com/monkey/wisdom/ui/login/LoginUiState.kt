@@ -36,6 +36,8 @@ data class LoginUiState(
     val registerUserType: Int = UserType.SHIPPER,
     val registerRealName: String = "",
     val registerMobile: String = "",
+    /** 司机注册时必填：车牌号 */
+    val registerPlateNo: String = "",
     val registerPassword: String = "",
     val registerConfirmPassword: String = "",
 ) {

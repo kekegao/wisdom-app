@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.monkey.wisdom.core.common.AppResult
+import com.monkey.wisdom.core.constants.UserType
 import com.monkey.wisdom.core.storage.UserSession
 import com.monkey.wisdom.core.util.Validators
 import com.monkey.wisdom.data.model.request.RegisterRequest
@@ -33,19 +34,34 @@ class LoginViewModel(
 
     fun onLoginPasswordChange(value: String) = updateForm { it.copy(loginPassword = value) }
 
-    fun onUserTypeSelect(userType: Int) = updateForm { it.copy(registerUserType = userType) }
+    fun onUserTypeSelect(userType: Int) = _uiState.update {
+        it.copy(
+            registerUserType = userType,
+            // 切回货主时清空车牌号，避免无意义残留
+            registerPlateNo = if (userType == UserType.SHIPPER) "" else it.registerPlateNo,
+            errorMessage = null,
+        )
+    }
 
     fun onRealNameChange(value: String) = updateForm { it.copy(registerRealName = value) }
 
     fun onRegisterMobileChange(value: String) = updateForm { it.copy(registerMobile = value) }
 
+    fun onRegisterPlateNoChange(value: String) = updateForm { it.copy(registerPlateNo = value) }
+
     fun onRegisterPasswordChange(value: String) = updateForm { it.copy(registerPassword = value) }
 
     fun onConfirmPasswordChange(value: String) = updateForm { it.copy(registerConfirmPassword = value) }
 
-    /** 切换登录 / 注册模式，并清空历史提示 */
+    /** 切换登录 / 注册模式，并清空历史提示与车牌号（避免残留） */
     fun switchMode(mode: AuthMode) = _uiState.update {
-        it.copy(mode = mode, errorMessage = null, serverError = null, successMessage = null)
+        it.copy(
+            mode = mode,
+            errorMessage = null,
+            serverError = null,
+            successMessage = null,
+            registerPlateNo = "",
+        )
     }
 
     // ==== 提交动作 ====
@@ -82,8 +98,10 @@ class LoginViewModel(
         if (state.loading) return
 
         Validators.validateRegister(
+            userType = state.registerUserType,
             realName = state.registerRealName.trim(),
             mobile = state.registerMobile.trim(),
+            plateNo = state.registerPlateNo.trim(),
             password = state.registerPassword,
             confirmPassword = state.registerConfirmPassword,
         )?.let { message ->
@@ -95,6 +113,7 @@ class LoginViewModel(
             userType = state.registerUserType,
             realName = state.registerRealName.trim(),
             mobile = state.registerMobile.trim(),
+            plateNo = state.registerPlateNo.trim().takeIf { it.isNotEmpty() },
             password = state.registerPassword,
         )
 

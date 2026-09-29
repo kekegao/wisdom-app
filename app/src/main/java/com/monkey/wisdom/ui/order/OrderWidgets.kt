@@ -65,12 +65,9 @@ fun carrierOrderStatusStyle(status: Int): StatusStyle =
     if (status in RUNNING_STATUSES) StatusStyle(Color(0xFF0369A1), Color(0xFFE0F2FE))
     else StatusStyle(Color(0xFF047857), Color(0xFFD1FAE5))
 
-/** 承运端「我的运单」状态文案：优先后端 statusDesc；对账状态统一展示“已对账” */
-fun carrierOrderStatusText(status: Int, statusDesc: String?): String {
-    // 与操作按钮“对账”区分，状态到达 9 后展示“已对账”
-    if (status == OrderStatus.RECONCILED.code) return "已对账"
-    return statusDesc?.takeIf { it.isNotBlank() } ?: CARRIER_STATUS_TEXT[status] ?: "状态$status"
-}
+/** 承运端「我的运单」状态文案：优先后端 statusDesc，缺失时按本地枚举兜底 */
+fun carrierOrderStatusText(status: Int, statusDesc: String?): String =
+    statusDesc?.takeIf { it.isNotBlank() } ?: CARRIER_STATUS_TEXT[status] ?: "状态$status"
 
 /** 货源大厅状态配色：可摘单 / 已摘单 */
 fun sourceStatusStyle(status: Int): StatusStyle =
@@ -80,17 +77,17 @@ fun sourceStatusStyle(status: Int): StatusStyle =
 /** 货源大厅状态文案 */
 fun sourceStatusText(status: Int): String = if (status == 1) "可摘单" else "已摘单"
 
-/** 承运端进行中状态：摘单→结算申请 */
+/** 承运端进行中状态：摘单→货主运费结算(7)；承运方运费结算(8) 起为完结态 */
 val RUNNING_STATUSES = listOf(2, 3, 4, 5, 6, 7)
 
 private val CARRIER_STATUS_TEXT = mapOf(
     2 to "摘单",
     3 to "成交",
     4 to "发货",
-    5 to "确认收货",
-    6 to "回单确认",
-    7 to "结算申请",
-    8 to "结算",
+    5 to "卸货",
+    6 to "确认收货",
+    7 to "货主运费结算",
+    8 to "承运方运费结算",
     9 to "已对账",
     10 to "发票",
 )

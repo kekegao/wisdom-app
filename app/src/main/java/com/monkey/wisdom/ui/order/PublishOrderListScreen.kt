@@ -78,7 +78,7 @@ fun PublishOrderListScreen(
     // 进入页面或从发布页返回时刷新，保证刚发布的运单立即可见
     LaunchedEffect(Unit) { viewModel.loadOrders() }
 
-    // 运单操作（成交 / 取消摘单 / 回单确认 / 结算申请）失败：弹窗提示
+    // 运单操作（成交 / 取消摘单 / 确认收货 / 货主运费结算）失败：弹窗提示
     ErrorDialog(message = state.errorDialog, onDismiss = viewModel::consumeErrorDialog)
 
     val detailOrder = state.detailOrder
@@ -336,8 +336,8 @@ private fun ShipperOrderCard(
                         CardActionButton(text = "取消", danger = true, onClick = { onAction(OrderConfirmAction.CANCEL_ACCEPT) })
                     }
 
-                    5 -> CardActionButton(text = "回单确认", primary = true, onClick = { onAction(OrderConfirmAction.RECEIPT_CONFIRM) })
-                    6 -> CardActionButton(text = "结算申请", primary = true, onClick = { onAction(OrderConfirmAction.SETTLE_APPLY) })
+                    5 -> CardActionButton(text = "确认收货", primary = true, onClick = { onAction(OrderConfirmAction.RECEIPT_CONFIRM) })
+                    6 -> CardActionButton(text = "运费结算", primary = true, onClick = { onAction(OrderConfirmAction.SETTLE_APPLY) })
                 }
                 CardActionButton(text = "查看详情", onClick = onDetail)
             }
@@ -394,7 +394,7 @@ private fun ShipperDetailActions(
                         .height(44.dp),
                     enabled = !submitting,
                 ) {
-                    Text(text = action.buttonText.removePrefix("确认"), fontSize = 15.sp)
+                    Text(text = action.buttonText, fontSize = 15.sp)
                 }
             } else {
                 androidx.compose.material3.OutlinedButton(

@@ -52,7 +52,7 @@ import com.monkey.wisdom.ui.theme.TextMuted
 import com.monkey.wisdom.ui.theme.TextSecondary
 
 /**
- * 承运方「我的运单」页：进度筛选、确认发货 / 确认收货。
+ * 承运方「我的运单」页：进度筛选、确认发货 / 卸货。
  *
  * 对应 Web 端 `/carrierOrderList`。
  */
@@ -67,7 +67,7 @@ fun CarrierOrderListScreen(
     // 后端接口返回成功：弹窗提示，用户点「确定」后关闭
     SuccessDialog(message = state.successMessage, onDismiss = viewModel::consumeSuccess)
 
-    // 确认发货 / 确认收货 / 对账失败：弹窗提示
+    // 确认发货 / 卸货 / 对账失败：弹窗提示
     ErrorDialog(message = state.errorDialog, onDismiss = viewModel::consumeErrorDialog)
 
     val detailOrder = state.detailOrder
@@ -79,7 +79,7 @@ fun CarrierOrderListScreen(
             onBack = viewModel::closeDetail,
             showCallButton = true,
             actionBar = {
-                // 与后端流转一致：成交(3)→发货(4) 确认发货；发货(4)→确认收货(5) 确认收货；结算申请(7)→对账(9) 对账
+                // 与后端流转一致：成交(3)→发货(4) 确认发货；发货(4)→卸货(5) 卸货；货主运费结算(7)→承运方运费结算(8) 对账
                 val action = when (detailOrder.status) {
                     OrderStatus.DEALED.code -> CarrierConfirmAction.SHIP
                     OrderStatus.SHIPPED.code -> CarrierConfirmAction.RECEIPT
@@ -290,9 +290,9 @@ private fun CarrierOrderCard(
                         onClick = { onConfirm(CarrierConfirmAction.SHIP) },
                     )
 
-                    // 发货(4)：运输中，到货后由承运方确认收货
+                    // 发货(4)：运输中，到货后由承运方卸货
                     OrderStatus.SHIPPED.code -> CardActionButton(
-                        text = "确认收货",
+                        text = "卸货",
                         primary = true,
                         enabled = !submitting,
                         onClick = { onConfirm(CarrierConfirmAction.RECEIPT) },

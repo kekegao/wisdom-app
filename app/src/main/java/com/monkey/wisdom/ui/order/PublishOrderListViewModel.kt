@@ -33,8 +33,8 @@ enum class OrderConfirmAction(
 ) {
     DEAL("确认成交", "确认成交", "成交失败，请稍后重试"),
     CANCEL_ACCEPT("取消摘单", "确认取消", "取消摘单失败，请稍后重试"),
-    RECEIPT_CONFIRM("回单确认", "确认回单", "回单确认失败，请稍后重试"),
-    SETTLE_APPLY("结算申请", "确认申请", "结算申请失败，请稍后重试"),
+    RECEIPT_CONFIRM("确认收货", "确认收货", "确认收货失败，请稍后重试"),
+    SETTLE_APPLY("货主运费结算", "运费结算", "运费结算失败，请稍后重试"),
 }
 
 /** 货主运单列表页状态 */
@@ -77,7 +77,7 @@ data class PublishOrderListUiState(
 }
 
 /**
- * 货主「我的订单」ViewModel：加载、筛选、成交 / 取消摘单 / 回单确认 / 结算申请。
+ * 货主「我的订单」ViewModel：加载、筛选、成交 / 取消摘单 / 确认收货 / 货主运费结算。
  */
 class PublishOrderListViewModel(
     private val orderRepository: OrderRepository,
@@ -171,8 +171,8 @@ class PublishOrderListViewModel(
                     val (nextStatus, nextDesc, message) = when (action) {
                         OrderConfirmAction.DEAL -> Triple(3, "成交", "成交成功，订单进入履约阶段")
                         OrderConfirmAction.CANCEL_ACCEPT -> Triple(1, "发布", "已取消摘单，运单恢复为待接单")
-                        OrderConfirmAction.RECEIPT_CONFIRM -> Triple(6, "回单确认", "回单确认成功，承运方发货保证金已解冻")
-                        OrderConfirmAction.SETTLE_APPLY -> Triple(7, "结算申请", "结算申请已提交，平台将尽快办理运费结算")
+                        OrderConfirmAction.RECEIPT_CONFIRM -> Triple(6, "确认收货", "确认收货成功，承运方发货保证金已解冻")
+                        OrderConfirmAction.SETTLE_APPLY -> Triple(7, "货主运费结算", "运费结算已提交，平台将尽快办理")
                     }
                     _state.update { state ->
                         val updated = state.allOrders.map { item ->
@@ -307,9 +307,9 @@ class PublishOrderListViewModel(
             OrderConfirmAction.CANCEL_ACCEPT ->
                 "是否取消「$carrier」的摘单？取消后运单将恢复为待接单，重新进入货源大厅。"
             OrderConfirmAction.RECEIPT_CONFIRM ->
-                "是否确认运单「${order.orderId}」的回单？确认后运单履约完成，承运方发货保证金将解冻退回。"
+                "是否确认运单「${order.orderId}」已收货？确认后运单履约完成，承运方发货保证金将解冻退回。"
             OrderConfirmAction.SETTLE_APPLY ->
-                "是否对运单「${order.orderId}」发起结算申请？提交后平台将按托管运费与承运方办理结算，运单进入结算流程。"
+                "是否对运单「${order.orderId}」发起运费结算？提交后平台将按托管运费与承运方办理结算，运单进入结算流程。"
         }
     }
 }

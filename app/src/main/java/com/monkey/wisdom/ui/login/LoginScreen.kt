@@ -150,6 +150,7 @@ fun LoginScreen(
                                 onUserTypeSelect = viewModel::onUserTypeSelect,
                                 onRealNameChange = viewModel::onRealNameChange,
                                 onMobileChange = viewModel::onRegisterMobileChange,
+                                onPlateNoChange = viewModel::onRegisterPlateNoChange,
                                 onPasswordChange = viewModel::onRegisterPasswordChange,
                                 onConfirmPasswordChange = viewModel::onConfirmPasswordChange,
                             )
@@ -212,13 +213,14 @@ private fun LoginFormSection(
     )
 }
 
-/** 注册表单：用户类型 + 姓名 + 手机号 + 密码 + 确认密码 */
+/** 注册表单：用户类型 + 姓名 + 手机号 + （司机）车牌号 + 密码 + 确认密码 */
 @Composable
 private fun RegisterFormSection(
     state: LoginUiState,
     onUserTypeSelect: (Int) -> Unit,
     onRealNameChange: (String) -> Unit,
     onMobileChange: (String) -> Unit,
+    onPlateNoChange: (String) -> Unit,
     onPasswordChange: (String) -> Unit,
     onConfirmPasswordChange: (String) -> Unit,
 ) {
@@ -249,6 +251,18 @@ private fun RegisterFormSection(
         maxLength = MAX_MOBILE_LENGTH,
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // 仅司机注册时收集车牌号；用户类型切换后清空由 ViewModel 保证
+    if (state.registerUserType == UserType.CARRIER) {
+        AppTextField(
+            value = state.registerPlateNo,
+            onValueChange = onPlateNoChange,
+            label = "车牌号",
+            placeholder = "如：京A12345",
+            enabled = !state.loading,
+            imeAction = ImeAction.Next,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
     AppTextField(
         value = state.registerPassword,
         onValueChange = onPasswordChange,

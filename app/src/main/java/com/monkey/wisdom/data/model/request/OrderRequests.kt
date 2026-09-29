@@ -52,17 +52,24 @@ data class OrderListQuery(
  * pageNum / pageSize 选填，后端做兜底与上限约束；不传即查第 1 页（默认 10 条）。
  */
 data class SourceOrderQuery(
-    /** 发货地关键字 */
+    /** 发货地关键字；不为空时由它生效，省市条件应传 null */
     val shipperKeyword: String? = null,
     /** 收货地关键字 */
     val carrierKeyword: String? = null,
+    /**
+     * 发货地省份（App 定位结果，作为默认查询条件）。
+     * 仅在 [shipperKeyword] 为空时由调用方传入，后端按省份模糊匹配。
+     */
+    val shipperProvince: String? = null,
+    /** 发货地城市（App 定位结果，作为默认查询条件），同上 */
+    val shipperCity: String? = null,
     /** 页码，从 1 开始 */
     val pageNum: Int? = 1,
     /** 每页条数 */
     val pageSize: Int? = 10,
 )
 
-/** 运单操作请求体（摘单 / 发货 / 确认收货 / 成交 / 取消摘单 / 回单确认 / 结算申请共用） */
+/** 运单操作请求体（摘单 / 发货 / 卸货 / 成交 / 取消摘单 / 确认收货 / 货主运费结算共用） */
 data class OrderOperateRequest(
     val orderId: String,
 )

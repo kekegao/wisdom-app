@@ -8,5 +8,7 @@ data class RegisterRequest(
     val userType: Int,
     val realName: String,
     val mobile: String,
+    /** 司机注册时必填：车牌号 */
+    val plateNo: String? = null,
     val password: String,
 )

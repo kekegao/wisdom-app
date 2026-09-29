@@ -48,10 +48,10 @@ class OrderRepositoryImpl(
         operate(orderId, "取消摘单失败") { orderApi.cancelAccept(it) }
 
     override suspend fun receiptConfirm(orderId: String): AppResult<Unit> =
-        operate(orderId, "回单确认失败") { orderApi.receiptConfirm(it) }
+        operate(orderId, "确认收货失败") { orderApi.receiptConfirm(it) }
 
     override suspend fun settleApply(orderId: String): AppResult<Unit> =
-        operate(orderId, "结算申请失败") { orderApi.settleApply(it) }
+        operate(orderId, "运费结算失败") { orderApi.settleApply(it) }
 
     override suspend fun acceptOrder(orderId: String): AppResult<Unit> =
         operate(orderId, "摘单失败，请稍后重试") { orderApi.acceptOrder(it) }
@@ -61,7 +61,7 @@ class OrderRepositoryImpl(
         safeMessageCall("确认发货失败") { orderApi.shipOrder(OrderOperateRequest(orderId)) }
 
     override suspend fun confirmReceipt(orderId: String): AppResult<Unit> =
-        operate(orderId, "确认收货失败") { orderApi.confirmReceipt(it) }
+        operate(orderId, "卸货失败") { orderApi.confirmReceipt(it) }
 
     override suspend fun reconcileOrder(orderId: String): AppResult<Unit> =
         operate(orderId, "对账失败，请稍后重试") { orderApi.reconcileOrder(it) }

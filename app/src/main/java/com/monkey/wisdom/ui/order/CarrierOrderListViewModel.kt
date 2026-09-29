@@ -18,7 +18,7 @@ enum class CarrierOrderTab(val label: String) {
     DONE("已完成"),
 }
 
-/** 承运端运单操作（确认发货 / 确认收货 / 对账） */
+/** 承运端运单操作（确认发货 / 卸货 / 对账） */
 enum class CarrierConfirmAction(
     val title: String,
     val buttonText: String,
@@ -28,14 +28,14 @@ enum class CarrierConfirmAction(
     SHIP(
         title = "确认发货",
         buttonText = "确认发货",
-        tip = "是否确认该运单已装车发货？\n确认后运单进入运输中，货主可实时查看运输进度；同时平台将冻结您的承运保证金，待货主回单确认后解冻。",
+        tip = "是否确认该运单已装车发货？\n确认后运单进入运输中，货主可实时查看运输进度；同时平台将冻结您的承运保证金，待货主确认收货后解冻。",
         successMessage = "已确认发货，运单进入运输中",
     ),
     RECEIPT(
-        title = "确认收货",
-        buttonText = "确认收货",
-        tip = "是否确认该运单已送达并完成收货？确认后等待货主回单确认，运费按平台托管流程结算。",
-        successMessage = "已确认收货，等待货主回单确认",
+        title = "卸货",
+        buttonText = "卸货",
+        tip = "是否确认该运单已送达并卸货？确认后等待货主确认收货，运费按平台托管流程结算。",
+        successMessage = "已卸货，等待货主确认收货",
     ),
     RECONCILE(
         title = "对账确认",
@@ -73,7 +73,7 @@ data class CarrierOrderListUiState(
 }
 
 /**
- * 承运端「我的运单」ViewModel：状态筛选 + 确认发货 / 确认收货。
+ * 承运端「我的运单」ViewModel：状态筛选 + 确认发货 / 卸货。
  */
 class CarrierOrderListViewModel(
     private val orderRepository: OrderRepository,
@@ -125,7 +125,7 @@ class CarrierOrderListViewModel(
     /** 关闭后端失败弹窗 */
     fun consumeErrorDialog() = _state.update { it.copy(errorDialog = null) }
 
-    /** 提交发货 / 收货确认，成功后重新拉取以保证状态与服务端一致 */
+    /** 提交发货 / 卸货，成功后重新拉取以保证状态与服务端一致 */
     fun submitConfirm() {
         val current = _state.value
         val action = current.confirmAction ?: return

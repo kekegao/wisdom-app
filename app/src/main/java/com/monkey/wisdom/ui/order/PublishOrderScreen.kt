@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.di.ServiceLocator
+import com.monkey.wisdom.ui.components.AreaSelector
 import com.monkey.wisdom.ui.components.AppScaffold
 import com.monkey.wisdom.ui.components.ErrorDialog
 import com.monkey.wisdom.ui.components.FormBanner
@@ -138,9 +139,16 @@ fun PublishOrderScreen(
                     city = state.shipperCity,
                     area = state.shipperArea,
                     address = state.shipperAddress,
-                    onProvinceChange = { value -> viewModel.update { it.copy(shipperProvince = value, errorMessage = null) } },
-                    onCityChange = { value -> viewModel.update { it.copy(shipperCity = value, errorMessage = null) } },
-                    onAreaChange = { value -> viewModel.update { it.copy(shipperArea = value, errorMessage = null) } },
+                    onAreaChange = { prov, cty, area ->
+                        viewModel.update {
+                            it.copy(
+                                shipperProvince = prov,
+                                shipperCity = cty,
+                                shipperArea = area,
+                                errorMessage = null,
+                            )
+                        }
+                    },
                     onAddressChange = { value -> viewModel.update { it.copy(shipperAddress = value, errorMessage = null) } },
                 )
 
@@ -152,9 +160,16 @@ fun PublishOrderScreen(
                     city = state.carrierCity,
                     area = state.carrierArea,
                     address = state.carrierAddress,
-                    onProvinceChange = { value -> viewModel.update { it.copy(carrierProvince = value, errorMessage = null) } },
-                    onCityChange = { value -> viewModel.update { it.copy(carrierCity = value, errorMessage = null) } },
-                    onAreaChange = { value -> viewModel.update { it.copy(carrierArea = value, errorMessage = null) } },
+                    onAreaChange = { prov, cty, area ->
+                        viewModel.update {
+                            it.copy(
+                                carrierProvince = prov,
+                                carrierCity = cty,
+                                carrierArea = area,
+                                errorMessage = null,
+                            )
+                        }
+                    },
                     onAddressChange = { value -> viewModel.update { it.copy(carrierAddress = value, errorMessage = null) } },
                 )
 
@@ -235,7 +250,7 @@ fun PublishOrderScreen(
     }
 }
 
-/** 地址输入区块：省 / 市 / 区 + 详细地址 */
+/** 地址输入区块：省 / 市 / 区 下拉联动 + 详细地址 */
 @Composable
 private fun AddressSection(
     title: String,
@@ -244,38 +259,16 @@ private fun AddressSection(
     city: String,
     area: String,
     address: String,
-    onProvinceChange: (String) -> Unit,
-    onCityChange: (String) -> Unit,
-    onAreaChange: (String) -> Unit,
+    onAreaChange: (province: String, city: String, area: String) -> Unit,
     onAddressChange: (String) -> Unit,
 ) {
     FormSection(title = title, subtitle = subtitle) {
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FormInput(
-                label = "省份",
-                value = province,
-                onValueChange = onProvinceChange,
-                modifier = Modifier.weight(1f),
-                placeholder = "广东省",
-                maxLength = 20,
-            )
-            FormInput(
-                label = "城市",
-                value = city,
-                onValueChange = onCityChange,
-                modifier = Modifier.weight(1f),
-                placeholder = "深圳市",
-                maxLength = 20,
-            )
-            FormInput(
-                label = "区县",
-                value = area,
-                onValueChange = onAreaChange,
-                modifier = Modifier.weight(1f),
-                placeholder = "南山区",
-                maxLength = 20,
-            )
-        }
+        AreaSelector(
+            province = province,
+            city = city,
+            area = area,
+            onChange = onAreaChange,
+        )
         FormInput(
             label = "详细地址",
             value = address,

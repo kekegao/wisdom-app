@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.monkey.wisdom.core.util.Formatters
+import com.monkey.wisdom.core.util.LocationHelper
 import com.monkey.wisdom.data.model.OrderItem
 import com.monkey.wisdom.di.ServiceLocator
 import com.monkey.wisdom.ui.components.AppScaffold
@@ -73,8 +75,16 @@ fun CarrierAcceptOrderScreen(
     viewModel: CarrierAcceptOrderViewModel = viewModel { CarrierAcceptOrderViewModel(ServiceLocator.orderRepository) },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val context = LocalContext.current
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+
+    // 进入页面即取当前定位：用所在省 / 市作为默认发货地查询条件
+    LaunchedEffect(Unit) {
+        val result = LocationHelper.fetchCurrentLocation(context)
+        val success = result as? LocationHelper.Result.Success
+        viewModel.applyLocation(success?.province, success?.city)
+    }
 
     // 上拉到底部自动加载下一页（距底部 3 条时预取，避免用户等待）
     LaunchedEffect(listState) {
@@ -237,12 +247,27 @@ fun CarrierAcceptOrderScreen(
                                 Text(text = if (state.loading) "…" else "搜索", fontSize = 13.sp)
                             }
                         }
+                        if (state.locating || state.defaultRegionText != null) {
+                            Text(
+                                text = if (state.locating) {
+                                    "正在获取当前位置，为你匹配同城货源…"
+                                } else {
+                                    "默认按当前定位「${state.defaultRegionText.orEmpty()}」查询，输入发货地后以输入为准"
+                                },
+                                color = TextMuted,
+                                fontSize = 11.sp,
+                                modifier = Modifier.padding(top = 8.dp),
+                            )
+                        }
                     }
                 }
 
                 when {
-                    state.loading && orders.isEmpty() -> item {
-                        LoadingBox(modifier = Modifier.height(220.dp), text = "正在查询货源，请稍候")
+                    (state.loading || state.locating) && orders.isEmpty() -> item {
+                        LoadingBox(
+                            modifier = Modifier.height(220.dp),
+                            text = if (state.locating) "正在获取当前位置，请稍候" else "正在查询货源，请稍候",
+                        )
                     }
 
                     state.errorMessage != null && orders.isEmpty() -> item {
