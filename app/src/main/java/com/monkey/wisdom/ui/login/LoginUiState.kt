@@ -34,6 +34,8 @@ data class LoginUiState(
     // ==== 注册表单 ====
     /** 用户类型：1 货主，2 司机 */
     val registerUserType: Int = UserType.SHIPPER,
+    /** 货主注册时必填：公司名称 */
+    val registerCustomerName: String = "",
     val registerRealName: String = "",
     val registerMobile: String = "",
     /** 司机注册时必填：车牌号 */

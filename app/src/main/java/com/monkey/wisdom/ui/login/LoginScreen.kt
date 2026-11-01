@@ -148,6 +148,7 @@ fun LoginScreen(
                             AuthMode.REGISTER -> RegisterFormSection(
                                 state = uiState,
                                 onUserTypeSelect = viewModel::onUserTypeSelect,
+                                onCustomerNameChange = viewModel::onRegisterCustomerNameChange,
                                 onRealNameChange = viewModel::onRealNameChange,
                                 onMobileChange = viewModel::onRegisterMobileChange,
                                 onPlateNoChange = viewModel::onRegisterPlateNoChange,
@@ -213,11 +214,12 @@ private fun LoginFormSection(
     )
 }
 
-/** 注册表单：用户类型 + 姓名 + 手机号 + （司机）车牌号 + 密码 + 确认密码 */
+/** 注册表单：用户类型 + （货主）公司名称 + 姓名 + 手机号 + （司机）车牌号 + 密码 + 确认密码 */
 @Composable
 private fun RegisterFormSection(
     state: LoginUiState,
     onUserTypeSelect: (Int) -> Unit,
+    onCustomerNameChange: (String) -> Unit,
     onRealNameChange: (String) -> Unit,
     onMobileChange: (String) -> Unit,
     onPlateNoChange: (String) -> Unit,
@@ -233,6 +235,18 @@ private fun RegisterFormSection(
         modifier = Modifier.fillMaxWidth(),
     )
     Spacer(modifier = Modifier.height(16.dp))
+    // 仅货主注册时收集公司名称
+    if (state.registerUserType == UserType.SHIPPER) {
+        AppTextField(
+            value = state.registerCustomerName,
+            onValueChange = onCustomerNameChange,
+            label = "公司名称",
+            placeholder = "请输入公司名称",
+            enabled = !state.loading,
+            imeAction = ImeAction.Next,
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+    }
     AppTextField(
         value = state.registerRealName,
         onValueChange = onRealNameChange,

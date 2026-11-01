@@ -6,6 +6,8 @@ package com.monkey.wisdom.data.model.request
 data class RegisterRequest(
     /** 用户类型：1 货主，2 司机 */
     val userType: Int,
+    /** 货主注册时必填：公司名称 */
+    val customerName: String? = null,
     val realName: String,
     val mobile: String,
     /** 司机注册时必填：车牌号 */

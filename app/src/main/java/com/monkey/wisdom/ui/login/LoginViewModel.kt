@@ -37,11 +37,14 @@ class LoginViewModel(
     fun onUserTypeSelect(userType: Int) = _uiState.update {
         it.copy(
             registerUserType = userType,
-            // 切回货主时清空车牌号，避免无意义残留
+            // 切回货主时清空车牌号；切回司机时清空公司名称，避免无意义残留
             registerPlateNo = if (userType == UserType.SHIPPER) "" else it.registerPlateNo,
+            registerCustomerName = if (userType == UserType.CARRIER) "" else it.registerCustomerName,
             errorMessage = null,
         )
     }
+
+    fun onRegisterCustomerNameChange(value: String) = updateForm { it.copy(registerCustomerName = value) }
 
     fun onRealNameChange(value: String) = updateForm { it.copy(registerRealName = value) }
 
@@ -53,7 +56,7 @@ class LoginViewModel(
 
     fun onConfirmPasswordChange(value: String) = updateForm { it.copy(registerConfirmPassword = value) }
 
-    /** 切换登录 / 注册模式，并清空历史提示与车牌号（避免残留） */
+    /** 切换登录 / 注册模式，并清空历史提示与专属字段（避免残留） */
     fun switchMode(mode: AuthMode) = _uiState.update {
         it.copy(
             mode = mode,
@@ -61,6 +64,7 @@ class LoginViewModel(
             serverError = null,
             successMessage = null,
             registerPlateNo = "",
+            registerCustomerName = "",
         )
     }
 
@@ -99,6 +103,7 @@ class LoginViewModel(
 
         Validators.validateRegister(
             userType = state.registerUserType,
+            customerName = state.registerCustomerName.trim(),
             realName = state.registerRealName.trim(),
             mobile = state.registerMobile.trim(),
             plateNo = state.registerPlateNo.trim(),
@@ -111,6 +116,7 @@ class LoginViewModel(
 
         val request = RegisterRequest(
             userType = state.registerUserType,
+            customerName = state.registerCustomerName.trim().takeIf { it.isNotEmpty() },
             realName = state.registerRealName.trim(),
             mobile = state.registerMobile.trim(),
             plateNo = state.registerPlateNo.trim().takeIf { it.isNotEmpty() },

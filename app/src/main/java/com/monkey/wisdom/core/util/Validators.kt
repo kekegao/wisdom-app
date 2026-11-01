@@ -23,15 +23,17 @@ object Validators {
         else -> null
     }
 
-    /** 注册表单校验（司机注册时必须填写车牌号） */
+    /** 注册表单校验（货主必填公司名称，司机必填车牌号） */
     fun validateRegister(
         userType: Int,
+        customerName: String,
         realName: String,
         mobile: String,
         plateNo: String,
         password: String,
         confirmPassword: String,
     ): String? = when {
+        userType == com.monkey.wisdom.core.constants.UserType.SHIPPER && customerName.isBlank() -> "请输入公司名称"
         realName.isBlank() -> "请输入真实姓名"
         !isValidMobile(mobile) -> "请输入正确的 11 位手机号"
         userType == com.monkey.wisdom.core.constants.UserType.CARRIER && plateNo.isBlank() -> "请输入车牌号"
